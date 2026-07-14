@@ -1,31 +1,27 @@
-import Link from "next/link";
+import Container from "../shared/Container";
+import Logo from "../shared/Logo";
 
 export default function Navbar() {
   return (
-    <header className="border-b bg-white">
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link
-          href="/"
-          className="text-xl font-bold text-blue-600"
-        >
-          Smart Guide
-        </Link>
+    <header className="sticky top-0 z-50 border-b bg-white">
+      <Container>
+        <div className="flex h-16 items-center justify-between">
+          <Logo />
 
-        <div className="flex items-center gap-6">
-          <Link href="/">Inicio</Link>
+          <nav className="hidden gap-8 md:flex">
+            <a href="/">Inicio</a>
+            <a href="/about">Acerca</a>
+            <a href="/contact">Contacto</a>
+          </nav>
 
-          <Link href="/about">Nosotros</Link>
-
-          <Link href="/contact">Contacto</Link>
-
-          <Link
+          <a
             href="/login"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
+            className="rounded-lg bg-black px-4 py-2 text-white"
           >
             Iniciar sesión
-          </Link>
+          </a>
         </div>
-      </nav>
+      </Container>
     </header>
   );
 }
