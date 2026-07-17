@@ -1,21 +1,19 @@
-import Container from "@/components/shared/Container";
+// 1. Importa todos tus componentes de la landing desde su carpeta real
+import Hero from "../../components/marketing/Hero";
+import Features from "../../components/marketing/Features";
+import Lugares from "../../components/marketing/Lugares";
+import Rutas from "../../components/marketing/Rutas";
+import FavoritosCTA from "../../components/marketing/FavoritosCTA";
 
-export default function Home() {
+export default function MarketingPage() {
   return (
-    <Container>
-      <section className="flex min-h-[80vh] flex-col items-center justify-center text-center">
-        <h1 className="mb-6 text-5xl font-bold">
-          Smart Guide
-        </h1>
-
-        <p className="mb-8 max-w-2xl text-lg text-gray-600">
-          Descubre lugares turísticos, crea itinerarios y explora tu próximo destino desde una sola aplicación.
-        </p>
-
-        <button className="rounded-lg bg-blue-600 px-6 py-3 text-white transition hover:bg-blue-700">
-          Comenzar
-        </button>
-      </section>
-    </Container>
+    <div className="flex flex-col gap-10">
+      {/* 2. Colócalos en el orden en que quieras que se muestren */}
+      <Hero />
+      <Features />
+      <Lugares />
+      <Rutas />
+      <FavoritosCTA />
+    </div>
   );
 }

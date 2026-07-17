@@ -1,5 +1,6 @@
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+// 💡 Cambiamos las rutas con "@/..." por rutas relativas "../..."
+import Navbar from "../../components/layout/Navbar";
+import Footer from "../../components/layout/Footer";
 
 export default function MarketingLayout({
   children,
