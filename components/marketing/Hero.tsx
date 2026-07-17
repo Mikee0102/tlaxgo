@@ -3,7 +3,7 @@ import React from 'react';
 export default function Hero() {
   return (
     <header className="relative bg-slate-900 text-white overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/90 to-transparent z-10" />
+      <div className="absolute inset-0 bg-linear-to-r from-slate-950 via-slate-900/90 to-transparent z-10" />
       <img 
         src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1920&q=80" 
         alt="Paisaje de aventura y turismo" 
