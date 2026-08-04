@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
-import "./globals.css";
+import "./globals.css"; // <-- Asegúrate de que esté importado
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -19,8 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body className={poppins.variable}>
+    <html lang="es" suppressHydrationWarning>
+      <body className={`${poppins.variable} font-sans antialiased`} suppressHydrationWarning>
         {children}
       </body>
     </html>
