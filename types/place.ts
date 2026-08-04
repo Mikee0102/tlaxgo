@@ -1,11 +1,4 @@
-export type PlaceCategory =
-  | 'museum'
-  | 'church'
-  | 'park'
-  | 'viewpoint'
-  | 'restaurant'
-  | 'hotel'
-  | 'other';
+export type PlaceCategory = 'museum' | 'church' | 'park' | 'viewpoint' | 'restaurant' | 'hotel' | 'other';
 
 export interface Place {
   id: string;
@@ -13,11 +6,11 @@ export interface Place {
   lat: number;
   lon: number;
   category: PlaceCategory;
+  description?: string;
   address?: string;
   phone?: string;
   website?: string;
-  // Campos que se conectarán con Supabase en fases posteriores
   rating?: number;
   imageUrl?: string;
-  description?: string;
+  isFavorite?: boolean;
 }
