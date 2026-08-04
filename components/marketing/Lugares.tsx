@@ -1,74 +1,158 @@
-import React from 'react';
+'use client';
+import React, { useState } from 'react';
+
+type CategoriaKey = 'todos' | 'naturaleza' | 'cultura' | 'aventura';
 
 interface Destino {
   id: number;
   nombre: string;
-  ubicacion: string;
-  imagen: string;
+  categoria: CategoriaKey;
+  region: string;
   descripcion: string;
+  imagen: string;
 }
 
-const destinosDestacados: Destino[] = [
+const destinosData: Destino[] = [
   {
     id: 1,
-    nombre: "Cascadas Esmeralda",
-    ubicacion: "Chiapas, México",
-    imagen: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80",
-    descripcion: "Explora la majestuosidad de aguas turquesas rodeadas de selva tropical profunda."
+    nombre: 'Santuario de las Luciérnagas',
+    categoria: 'naturaleza',
+    region: 'Nanacamilpa',
+    descripcion: 'Un espectáculo natural único donde los bosques de coníferas se iluminan por miles de luciérnagas durante el verano.',
+    imagen: '/luciernagas.jpg',
   },
   {
     id: 2,
-    nombre: "Valle de las Luces",
-    ubicacion: "Tlaxcala, México",
-    imagen: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80",
-    descripcion: "Un místico santuario natural donde la fauna y los senderos nocturnos cobran vida."
+    nombre: 'Huamantla y su Tradición',
+    categoria: 'cultura',
+    region: 'Huamantla',
+    descripcion: 'Pueblo Mágico reconocido por sus hermosos alfombrados de aserrín y la tradicional noche que nadie duerme.',
+    imagen: '/huamantla.jpg',
   },
   {
     id: 3,
-    nombre: "Ruinas del Viento",
-    ubicacion: "Yucatán, México",
-    imagen: "https://images.unsplash.com/photo-1518638150341-f81217277c04?auto=format&fit=crop&w=600&q=80",
-    descripcion: "Camina por senderos ancestrales y descubre la historia de las civilizaciones milenarias."
-  }
+    nombre: 'Haciendas Pulqueras de Tlaxco',
+    categoria: 'aventura',
+    region: 'Tlaxco',
+    descripcion: 'Recorridos históricos entre arquitectura colonial, degustación de pulque artesanal y paisajes boscosos de altura.',
+    imagen: '/tlaxco.jpg',
+  },
+  {
+    id: 4,
+    nombre: 'Zona Arqueológica Cacaxtla',
+    categoria: 'cultura',
+    region: 'Nativitas',
+    descripcion: 'Impresionantes murales prehispánicos de colores originales que narran la historia militar y mitológica de la región.',
+    imagen: '/cacaxtla.jpg',
+  },
+  {
+    id: 5,
+    nombre: 'La Malinche (Matlalcueye)',
+    categoria: 'naturaleza',
+    region: 'Centro / Huamantla',
+    descripcion: 'Parque Nacional ideal para el ecoturismo, senderismo de montaña y campamentos rodeados de bosques.',
+    imagen: '/malinche.jpg',
+  },
+  {
+    id: 6,
+    nombre: 'Ixtenco y el Maíz Nativo',
+    categoria: 'cultura',
+    region: 'Ixtenco',
+    descripcion: 'Último bastión de la cultura Otomí, famoso por sus cuadros elaborados con semillas y granos ancestrales.',
+    imagen: '/ixtenco.jpg',
+  },
+];
+
+const categorias: { key: CategoriaKey; label: string }[] = [
+  { key: 'todos', label: '✨ Todos los Lugares' },
+  { key: 'naturaleza', label: '🌲 Naturaleza' },
+  { key: 'cultura', label: '🏛️ Cultura & Tradición' },
+  { key: 'aventura', label: '⛰️ Aventura' },
 ];
 
 export default function Lugares() {
+  const [filtro, setFiltro] = useState<CategoriaKey>('todos');
+
+  const destinosFiltrados = filtro === 'todos' 
+    ? destinosData 
+    : destinosData.filter((d) => d.categoria === filtro);
+
   return (
-    <section id="lugares" className="py-20 bg-slate-50">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
+    <section id="destinos" className="py-24 bg-slate-900 text-slate-100">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div>
-            <h2 className="text-3xl font-bold text-slate-950 tracking-tight">Destinos Recomendados</h2>
-            <p className="text-slate-600 mt-2">Los rincones mejor calificados por nuestra comunidad de viajeros.</p>
+            <span className="text-sky-400 font-semibold tracking-widest text-xs uppercase block mb-3">
+              Descubre el Corazón de México
+            </span>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+              Destinos Imperdibles de <span className="text-sky-400">Tlaxcala</span>
+            </h2>
           </div>
-          <button className="mt-4 md:mt-0 text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-2 transition-all">
-            Ver todos los lugares <span>&rarr;</span>
-          </button>
+          <p className="text-slate-300 max-w-md text-sm md:text-base leading-relaxed">
+            Sumérgete en la magia de nuestros municipios. Experiencias diseñadas para conectar con la historia, el arte y los paisajes naturales.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {destinosDestacados.map((destino) => (
-            <div key={destino.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-lg transition-all group">
-              <div className="relative h-56 overflow-hidden">
+        <div className="flex flex-wrap gap-3 mb-12 border-b border-slate-800 pb-6">
+          {categorias.map((cat) => (
+            <button
+              key={cat.key}
+              onClick={() => setFiltro(cat.key)}
+              className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
+                filtro === cat.key
+                  ? 'bg-sky-500 text-slate-950 font-bold shadow-lg shadow-sky-500/20'
+                  : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {destinosFiltrados.map((item) => (
+            <div 
+              key={item.id}
+              className="group relative bg-slate-950 rounded-3xl overflow-hidden border border-slate-800 hover:border-sky-500/50 transition-all duration-500 flex flex-col"
+            >
+              <div className="relative h-72 w-full overflow-hidden bg-slate-900">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
-                  src={destino.imagen} 
-                  alt={destino.nombre} 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-350"
+                  src={item.imagen} 
+                  alt={item.nombre} 
+                  loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-90"
                 />
-                <span className="absolute top-4 left-4 bg-slate-950/70 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full">
-                  {destino.ubicacion}
+                <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+                <span className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-md text-sky-400 border border-slate-700/50 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
+                  {item.region}
                 </span>
               </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-slate-950 mb-2">{destino.nombre}</h3>
-                <p className="text-slate-600 text-sm leading-relaxed mb-4">{destino.descripcion}</p>
-                <button className="w-full py-2.5 bg-slate-100 hover:bg-emerald-500 hover:text-slate-950 text-slate-700 font-semibold rounded-lg text-sm transition-all">
-                  Explorar Lugar
-                </button>
+
+              <div className="p-8 flex flex-col grow justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-white group-hover:text-sky-400 transition-colors mb-3">
+                    {item.nombre}
+                  </h3>
+                  <p className="text-slate-300 text-sm leading-relaxed mb-6">
+                    {item.descripcion}
+                  </p>
+                </div>
+
+                <a 
+                  href={`/municipios/${item.id}`}
+                  className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-sky-400 hover:text-sky-300 transition"
+                >
+                  Ver Guía Completa 
+                  <span className="transform group-hover:translate-x-1 transition-transform">&rarr;</span>
+                </a>
               </div>
             </div>
           ))}
         </div>
+
       </div>
     </section>
   );

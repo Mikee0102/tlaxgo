@@ -1,35 +1,48 @@
+'use client';
 import React from 'react';
 
 export default function Hero() {
   return (
-    <header className="relative bg-slate-900 text-white overflow-hidden">
-      <div className="absolute inset-0 bg-linear-to-r from-slate-950 via-slate-900/90 to-transparent z-10" />
-      <img 
-        src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1920&q=80" 
-        alt="Paisaje de aventura y turismo" 
-        className="absolute inset-0 w-full h-full object-cover object-center opacity-40"
-      />
-      <div className="relative max-w-6xl mx-auto px-6 py-32 md:py-48 z-20 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-        <div>
-          <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs uppercase tracking-widest font-semibold px-3 py-1 rounded-full">
-            Explora lo inexplorado
-          </span>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mt-6 leading-tight">
-            Tu próximo destino comienza <span className="text-emerald-400">aquí</span>
-          </h1>
-          <p className="mt-6 text-lg text-slate-300 leading-relaxed">
-            Descubre lugares mágicos, planifica rutas personalizadas por expertos locales y guarda tus rincones favoritos para tu próxima gran aventura.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-4">
-            <a href="#lugares" className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-8 py-3.5 rounded-lg font-bold shadow-lg shadow-emerald-950/20 transition-all">
-              Explorar Destinos
-            </a>
-            <a href="#rutas" className="border border-slate-400 hover:bg-white/10 text-white px-8 py-3.5 rounded-lg font-semibold transition-all">
-              Ver Rutas
-            </a>
-          </div>
+    <section id="hero" className="relative min-h-[85vh] flex items-center justify-center bg-slate-950 text-slate-100 overflow-hidden pt-16 pb-16">
+      {/* Imagen local cargada desde la carpeta public */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img 
+          src="/hero.jpg" 
+          alt="Paisaje panorámico de Tlaxcala" 
+          className="w-full h-full object-cover opacity-35 scale-105"
+        />
+        <div className="absolute inset-0 bg-linear-to-b from-slate-950/60 via-slate-950/80 to-slate-950"></div>
+      </div>
+
+      <div className="relative z-10 max-w-5xl mx-auto px-6 lg:px-8 text-center">
+        <span className="inline-block py-1.5 px-5 rounded-full bg-slate-900/90 text-sky-400 text-xs font-bold uppercase tracking-widest mb-6 border border-slate-800 shadow-lg backdrop-blur-md">
+          ✨ Descubre la riqueza de Tlaxcala
+        </span>
+
+        <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white mb-6 leading-tight">
+          Tu guía inteligente para explorar <span className="text-sky-400">Tlaxcala</span>
+        </h1>
+
+        <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
+          Planifica rutas interactivas, descubre los 60 municipios, tradiciones centenarias y vive una experiencia turística única con Tlaxgo.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a
+            href="#destinos"
+            className="w-full sm:w-auto px-8 py-4 rounded-full bg-sky-500 text-slate-950 font-bold text-sm tracking-wider uppercase shadow-lg shadow-sky-500/20 hover:bg-sky-400 transition-all duration-300"
+          >
+            Explorar Destinos
+          </a>
+          <a
+            href="/auth/register"
+            className="w-full sm:w-auto px-8 py-4 rounded-full bg-slate-900/80 backdrop-blur-md text-slate-200 font-bold text-sm tracking-wider uppercase border border-slate-800 hover:bg-slate-800 hover:text-white transition-all duration-300"
+          >
+            Crear mi Cuenta
+          </a>
         </div>
       </div>
-    </header>
+    </section>
   );
 }

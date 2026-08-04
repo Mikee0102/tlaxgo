@@ -3,6 +3,7 @@ import Hero from "../../components/marketing/Hero";
 import Features from "../../components/marketing/Features";
 import Lugares from "../../components/marketing/Lugares";
 import Rutas from "../../components/marketing/Rutas";
+import MunicipiosUnicos from "../../components/marketing/MunicipiosUnicos";
 import FavoritosCTA from "../../components/marketing/FavoritosCTA";
 
 export default function MarketingPage() {
@@ -13,6 +14,7 @@ export default function MarketingPage() {
       <Features />
       <Lugares />
       <Rutas />
+      <MunicipiosUnicos />
       <FavoritosCTA />
     </div>
   );
