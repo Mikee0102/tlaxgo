@@ -11,7 +11,7 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
   if (!place) return null;
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 bg-white rounded-xl shadow-lg border border-slate-100 p-5  transition-all duration-300">
+    <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 bg-white rounded-xl shadow-lg border border-slate-100 p-5 z-[9999] transition-all duration-300">
       {/* Botón Cerrar */}
       <button
         onClick={onClose}
