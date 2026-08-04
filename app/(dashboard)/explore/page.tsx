@@ -76,7 +76,7 @@ export default function ExplorePage() {
   return (
     <main className="relative flex flex-col h-[calc(100vh-64px)] w-full overflow-hidden bg-slate-50">
       {/* Contenedor Flotante de Controles superiores (Buscador y Filtros) */}
-      <div className="absolute top-4 left-4 right-4  max-w-xl mx-auto flex flex-col gap-3">
+      <div className="absolute top-4 left-4 right-4 z-[9999] max-w-xl mx-auto flex flex-col gap-3">
         <SearchBar value={searchTerm} onChange={setSearchTerm} />
         <Filters activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
       </div>

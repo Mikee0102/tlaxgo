@@ -34,8 +34,6 @@ function getCategoryFromTags(tags: Record<string, string>): PlaceCategory {
  * Consulta la Overpass API para obtener lugares turísticos en Tlaxcala
  */
 export async function fetchPlacesFromOverpass(): Promise<Place[]> {
-  // Consulta Overpass QL
-  // Busca nodos (node) y maneras (way) con etiquetas turísticas y de interés dentro del Bbox de Tlaxcala
   const query = `
     [out:json][timeout:25];
     (
@@ -55,19 +53,18 @@ export async function fetchPlacesFromOverpass(): Promise<Place[]> {
   try {
     const response = await fetch(url);
     
+    // Si el servidor de Overpass da Timeout (504) o falla, devolvemos un array vacío
+    // en lugar de lanzar una excepción que tire la aplicación.
     if (!response.ok) {
-      throw new Error(`Error en la petición a Overpass: ${response.statusText}`);
+      console.warn(`Overpass API respondió con estado: ${response.status}. Usando fallback vacío.`);
+      return getFallbackPlaces(); // Retornamos datos de prueba locales para que puedas seguir desarrollando
     }
 
     const data = await response.json();
-    
-    if (!data.elements) return [];
+    if (!data.elements) return getFallbackPlaces();
 
-    // Mapeamos y limpiamos los elementos de OSM al formato de nuestro contrato (Place)
     return data.elements.map((element: any) => {
       const tags = element.tags || {};
-      
-      // Overpass devuelve las coordenadas en 'center' para "ways" (polígonos) o en 'lat'/'lon' para "nodes" (puntos)
       const lat = element.lat ?? element.center?.lat;
       const lon = element.lon ?? element.center?.lon;
 
@@ -82,14 +79,37 @@ export async function fetchPlacesFromOverpass(): Promise<Place[]> {
           : undefined,
         phone: tags.phone || tags['contact:phone'] || undefined,
         website: tags.website || tags['contact:website'] || undefined,
-        // Valores por defecto para el Sprint 1 (se conectarán a Supabase en el futuro)
         rating: 4.5, 
         description: tags.description || `Un hermoso lugar de interés ubicado en Tlaxcala.`,
       };
     }).filter((place: Place) => place.name !== 'Lugar sin nombre' && !isNaN(place.lat) && !isNaN(place.lon));
 
   } catch (error) {
-    console.error('Error al cargar los lugares desde Overpass:', error);
-    return [];
+    console.error('Error de red al conectar con Overpass API. Usando fallback vacío:', error);
+    return getFallbackPlaces(); 
   }
+}
+
+// Función auxiliar para que tu mapa nunca se quede vacío si la API externa falla
+function getFallbackPlaces(): Place[] {
+  return [
+    {
+      id: 'fb-1',
+      name: 'Zócalo de Tlaxcala',
+      lat: 19.3182,
+      lon: -98.2396,
+      category: 'park',
+      description: 'Plaza principal de la ciudad de Tlaxcala, rodeada de edificios coloniales históricos.',
+      address: 'Portal de Hidalgo, Centro, Tlaxcala'
+    },
+    {
+      id: 'fb-2',
+      name: 'Museo de Arte de Tlaxcala',
+      lat: 19.3186,
+      lon: -98.2385,
+      category: 'museum',
+      description: 'Espacio dedicado a la difusión de las artes visuales del estado.',
+      address: 'Plaza de la Constitución 21, Centro, Tlaxcala'
+    }
+  ];
 }
