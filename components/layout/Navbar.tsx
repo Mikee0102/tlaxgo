@@ -32,9 +32,11 @@ export default function Navbar() {
         {/* Enlaces de Escritorio */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
           <a href="#hero" onClick={(e) => handleScrollTo(e, 'hero')} className="hover:text-sky-400 transition cursor-pointer">Inicio</a>
-          <a href="#destinos" onClick={(e) => handleScrollTo(e, 'destinos')} className="hover:text-sky-400 transition cursor-pointer">Destinos</a>
           <a href="#municipios" onClick={(e) => handleScrollTo(e, 'municipios')} className="text-sky-400 font-semibold hover:text-sky-300 transition cursor-pointer">Municipios</a>
           <a href="#rutas" onClick={(e) => handleScrollTo(e, 'rutas')} className="hover:text-sky-400 transition cursor-pointer">Rutas</a>
+          
+          {/* NUEVAS RUTAS - Solo enlaces, sin estilos nuevos */}
+          <Link href="/itinerary" className="hover:text-sky-400 transition">Itinerario</Link>
         </nav>
 
         {/* Botón de Acción */}
@@ -65,6 +67,11 @@ export default function Navbar() {
           <a href="#destinos" onClick={(e) => handleScrollTo(e, 'destinos')} className="block text-slate-300 hover:text-sky-400 text-sm font-medium cursor-pointer">Destinos</a>
           <a href="#municipios" onClick={(e) => handleScrollTo(e, 'municipios')} className="block text-sky-400 font-semibold text-sm cursor-pointer">Municipios</a>
           <a href="#rutas" onClick={(e) => handleScrollTo(e, 'rutas')} className="block text-slate-300 hover:text-sky-400 text-sm font-medium cursor-pointer">Rutas</a>
+          
+          {/* NUEVAS RUTAS MÓVIL */}
+          <Link href="/favorites" className="block text-slate-300 hover:text-sky-400 text-sm font-medium">Favoritos</Link>
+          <Link href="/itinerary" className="block text-slate-300 hover:text-sky-400 text-sm font-medium">Itinerario</Link>
+          <Link href="/profile" className="block text-slate-300 hover:text-sky-400 text-sm font-medium">Perfil</Link>
         </div>
       )}
     </header>
