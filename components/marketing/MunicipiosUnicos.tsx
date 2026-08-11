@@ -1,6 +1,7 @@
 'use client';
-import React, { useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { useState } from 'react';
+import Image from 'next/image';
+import { MapPin, Sparkles, Calendar, Compass } from 'lucide-react';
 
 interface MunicipioDetalle {
   id: number;
@@ -9,13 +10,14 @@ interface MunicipioDetalle {
   feriaFecha: string;
   mejorEpoca: string;
   descripcion: string;
+  imagen?: string;
 }
 
 const los60Municipios: MunicipioDetalle[] = [
   { id: 1, municipio: 'Amaxac de Guerrero', lugarUnico: 'Capilla de la Villita y mascaritas de carnaval', feriaFecha: 'Último domingo de mayo', mejorEpoca: 'Mayo', descripcion: 'Cuna de tradicionales artesanos de la madera y danzantes de carnaval.' },
   { id: 2, municipio: 'Apetatitlán de Antonio Carvajal', lugarUnico: 'Ex-Fábrica de San Manuel y riberas del río Zahuapan', feriaFecha: '29 de septiembre', mejorEpoca: 'Septiembre', descripcion: 'Zona con hermosos paisajes de ribera e importante historia textil.' },
   { id: 3, municipio: 'Atlangatepec', lugarUnico: 'Laguna de Atlangatepec (Paseos en lancha y pesca)', feriaFecha: '24 de junio', mejorEpoca: 'Verano', descripcion: 'Cuerpo de agua ideal para el ecoturismo, paseos y degustación de mariscos locales.' },
-  { id: 4, municipio: 'Atltzayanca', lugarUnico: 'Haciendas pulqueras y cañones naturales', feriaFecha: '25 de julio', mejorEpoca: 'Julio', descripcion: 'Famoso por su arraigada producción pulquera y paisajes montañosos.' },
+  { id: 4, municipio: 'Altzayanca', lugarUnico: 'Haciendas pulqueras y cañones naturales', feriaFecha: '25 de julio', mejorEpoca: 'Julio', descripcion: 'Famoso por su arraigada producción pulquera y paisajes montañosos.' },
   { id: 5, municipio: 'Apizaco', lugarUnico: 'Maquinaria de la Locomotora y Basílica de la Misericordia', feriaFecha: 'Del 1 al 15 de marzo', mejorEpoca: 'Marzo', descripcion: 'Ciudad rielera por excelencia, centro comercial e industrial del estado.' },
   { id: 6, municipio: 'Calpulalpan', lugarUnico: 'Zona Arqueológica de Tecoaque y Templo de San Antonio', feriaFecha: 'Del 5 al 13 de junio', mejorEpoca: 'Junio', descripcion: 'Importante paso histórico del Camino Real de Tierra Adentro y vestigios arqueológicos.' },
   { id: 7, municipio: 'El Carmen Tequexquitla', lugarUnico: 'Ex-Hacienda de Soltepec y llanos salineros', feriaFecha: '16 de julio', mejorEpoca: 'Julio', descripcion: 'Paisajes semiáridos e historia ligada a las antiguas rutas comerciales del oriente.' },
@@ -24,17 +26,17 @@ const los60Municipios: MunicipioDetalle[] = [
   { id: 10, municipio: 'Chiautempan', lugarUnico: 'Mercado de Artesanías de Lana y sarapes tradicionales', feriaFecha: 'Del 24 de julio al 2 de agosto', mejorEpoca: 'Julio - Agosto', descripcion: 'Famoso internacionalmente por sus textiles de lana, cobijas y pan de fiesta.' },
   { id: 11, municipio: 'Muñoz de Domingo Arenas', lugarUnico: 'Ex-Hacienda de San Ildefonso', feriaFecha: '23 de enero', mejorEpoca: 'Enero', descripcion: 'Riqueza arquitectónica en cascos de haciendas e historia agrícola regional.' },
   { id: 12, municipio: 'Españita', lugarUnico: 'Bosques y templos coloniales rurales', feriaFecha: '24 de junio', mejorEpoca: 'Junio', descripcion: 'Rodeado de áreas naturales y campos de cultivo tradicionales de temporal.' },
-  { id: 13, municipio: 'Huamantla', lugarUnico: 'Museo Nacional del Títere y La Noche que Nadie Duerme', feriaFecha: 'Del 31 de julio al 31 de agosto', mejorEpoca: 'Agosto', descripcion: 'Pueblo Mágico mundialmente reconocido por sus alfombras de aserrín y la Huamantlada.' },
+  { id: 13, municipio: 'Huamantla', lugarUnico: 'Museo Nacional del Títere y La Noche que Nadie Duerme', feriaFecha: 'Del 31 de julio al 31 de agosto', mejorEpoca: 'Agosto', descripcion: 'Pueblo Mágico mundialmente reconocido por sus alfombras de aserrín y la Huamantlada.', imagen: '/huamantla.jpg' },
   { id: 14, municipio: 'Hueyotlipan', lugarUnico: 'Acueducto colonial y ruinas históricas', feriaFecha: '19 de marzo', mejorEpoca: 'Marzo', descripcion: 'Destaca por su patrimonio virreinal y vestigios arquitectónicos antiguos.' },
   { id: 15, municipio: 'Ixtacuixtla de Mariano Matamoros', lugarUnico: 'Templo de San Felipe y haciendas pulqueras', feriaFecha: '5 de febrero', mejorEpoca: 'Febrero', descripcion: 'Fuerte tradición pulquera e historia ligada al movimiento independentista.' },
-  { id: 16, municipio: 'Ixtenco', lugarUnico: 'Museo Comunitario del Maíz y Cuadros de Semillas', feriaFecha: 'Del 12 al 25 de junio', mejorEpoca: 'Junio', descripcion: 'Último bastión cultural otomí con gran variedad de maíces nativos de colores.' },
+  { id: 16, municipio: 'Ixtenco', lugarUnico: 'Museo Comunitario del Maíz y Cuadros de Semillas', feriaFecha: 'Del 12 al 25 de junio', mejorEpoca: 'Junio', descripcion: 'Último bastión cultural otomí con gran variedad de maíces nativos de colores.', imagen: '/ixtenco.jpg' },
   { id: 17, municipio: 'Mazatecochco de José María Morelos', lugarUnico: 'Talleres de pan tradicional y bordados', feriaFecha: '28 de octubre', mejorEpoca: 'Octubre', descripcion: 'Comunidad caracterizada por su labor panadera artesanal y comercio.' },
   { id: 18, municipio: 'Contla de Juan Cuamatzi', lugarUnico: 'Centro Artesanal del Sarape y Confección Textil', feriaFecha: 'Del 20 al 28 de mayo', mejorEpoca: 'Mayo', descripcion: 'Reconocido corazón de tejedores y artesanos textiles de valor mundial.' },
   { id: 19, municipio: 'Tepetitla de Lardizábal', lugarUnico: 'Parroquia de San Mateo y zonas ribereñas', feriaFecha: '21 de septiembre', mejorEpoca: 'Septiembre', descripcion: 'Zona de rica actividad agrícola e histórica al poniente del estado.' },
   { id: 20, municipio: 'Sanctórum de Lázaro Cárdenas', lugarUnico: 'Santuarios boscosos y zonas de cultivo de aguamiel', feriaFecha: 'Última semana de junio', mejorEpoca: 'Junio - Julio', descripcion: 'Paisajes agrícolas de altura y cercanía con la ruta de luciérnagas.' },
-  { id: 21, municipio: 'Nanacamilpa de Mariano Arista', lugarUnico: 'Santuario de las Luciérnagas (Bosques de Ciénega)', feriaFecha: 'Marzo', mejorEpoca: 'Junio a Agosto', descripcion: 'Puntos boscosos que se transforman en un espectáculo natural único en verano.' },
+  { id: 21, municipio: 'Nanacamilpa de Mariano Arista', lugarUnico: 'Santuario de las Luciérnagas (Bosques de Ciénega)', feriaFecha: 'Marzo', mejorEpoca: 'Junio a Agosto', descripcion: 'Puntos boscosos que se transforman en un espectáculo natural único en verano.', imagen: '/luciernagas.jpg' },
   { id: 22, municipio: 'Acuamanala de Miguel Hidalgo', lugarUnico: 'Templo de San Andrés y tradiciones comunitarias', feriaFecha: '30 de noviembre', mejorEpoca: 'Noviembre', descripcion: 'Destaca por su arraigada cultura textil y festividades patronales de barrio.' },
-  { id: 23, municipio: 'Natívitas', lugarUnico: 'Zona Arqueológica de Cacaxtla y Xochitécatl', feriaFecha: '15 de mayo', mejorEpoca: 'Primavera', descripcion: 'Impresionantes basamentos piramidales con murales originales de culturas prehispánicas.' },
+  { id: 23, municipio: 'Natívitas', lugarUnico: 'Zona Arqueológica de Cacaxtla y Xochitécatl', feriaFecha: '15 de mayo', mejorEpoca: 'Primavera', descripcion: 'Impresionantes basamentos piramidales con murales originales de culturas prehispánicas.', imagen: '/cacaxtla.jpg' },
   { id: 24, municipio: 'Panotla', lugarUnico: 'Puente de Piedra colonial y riberas', feriaFecha: '4 de octubre', mejorEpoca: 'Octubre', descripcion: 'Punto estratégico histórico cercano a la capital con bellas postales fluviales.' },
   { id: 25, municipio: 'San Pablo del Monte', lugarUnico: 'Barrio de artesanos de talavera e iglesias virreinales', feriaFecha: '29 de junio', mejorEpoca: 'Junio', descripcion: 'Famoso por sus talleres certificados de talavera y su cercanía con la Malinche.' },
   { id: 26, municipio: 'Santa Cruz Tlaxcala', lugarUnico: 'Templo Franciscano de la Santa Cruz y riberas', feriaFecha: '3 de mayo', mejorEpoca: 'Mayo', descripcion: 'Herencia franciscana y hermosos paisajes arbolados a lo largo del río.' },
@@ -45,7 +47,7 @@ const los60Municipios: MunicipioDetalle[] = [
   { id: 31, municipio: 'Tetla de la Solidaridad', lugarUnico: 'Ex-Hacienda de Tepalcayuca y zona industrial', feriaFecha: '25 de julio', mejorEpoca: 'Julio', descripcion: 'Fusión de historia hacendaria, modernidad industrial y tradición ganadera.' },
   { id: 32, municipio: 'Tetlatlahuca', lugarUnico: 'Templo de Santa Ana y capillas históricas', feriaFecha: '26 de julio', mejorEpoca: 'Julio', descripcion: 'Tranquilo municipio de profundas raíces agrícolas y festividades religiosas.' },
   { id: 33, municipio: 'Tlaxcala', lugarUnico: 'El Barco de Fe (Templo de San José) y Murales de Palacio', feriaFecha: 'Del 24 de octubre al 19 de noviembre', mejorEpoca: 'Octubre - Noviembre', descripcion: 'Capital del estado que resguarda joyas virreinales únicas y la Feria de Ferias.' },
-  { id: 34, municipio: 'Tlaxco', lugarUnico: 'Pinturas rupestres de La Gloria y quesos artesanales', feriaFecha: 'Del 26 de agosto al 4 de septiembre', mejorEpoca: 'Todo el año', descripcion: 'Pueblo Mágico montañoso con callejones pintorescos, madera tallada y pulque.' },
+  { id: 34, municipio: 'Tlaxco', lugarUnico: 'Pinturas rupestres de La Gloria y quesos artesanales', feriaFecha: 'Del 26 de agosto al 4 de septiembre', mejorEpoca: 'Todo el año', descripcion: 'Pueblo Mágico montañoso con callejones pintorescos, madera tallada y pulque.', imagen: '/tlaxco.jpg' },
   { id: 35, municipio: 'Tocatlán', lugarUnico: 'Parroquia de la Santísima Trinidad', feriaFecha: 'Domingo de Santísima Trinidad (Mayo/Junio)', mejorEpoca: 'Mayo - Junio', descripcion: 'Comunidad tradicional dedicada a la agricultura y el comercio local.' },
   { id: 36, municipio: 'Totolac', lugarUnico: 'Puente de las Delicias y Cuna de la Nación Tlaxcalteca', feriaFecha: 'Día de la Ascensión (Movible)', mejorEpoca: 'Primavera', descripcion: 'Sitio histórico clave con arquitectura tradicional y producción de pan.' },
   { id: 37, municipio: 'Zitlaltepec de Trinidad Sánchez Santos', lugarUnico: 'Ascenso a la Malinche por la cara oriente y bosques', feriaFecha: '1 de noviembre', mejorEpoca: 'Noviembre', descripcion: 'Impresionantes vistas hacia el pico de la montaña y el altiplano.' },
@@ -74,6 +76,54 @@ const los60Municipios: MunicipioDetalle[] = [
   { id: 60, municipio: 'Santa Isabel Xiloxoxtla', lugarUnico: 'Capilla de Santa Isabel y bordados tradicionales', feriaFecha: '8 de julio', mejorEpoca: 'Julio', descripcion: 'Pequeño municipio con gran riqueza cultural en textiles, bordados y gastronomía.' }
 ];
 
+const imagenPorDefecto = '/hero.jpg';
+
+const imagenesMunicipio: Record<string, string> = {
+  'Acuamanala de Miguel Hidalgo': '/Acuamanala de Miguel Hidalgo.jpg',
+  'Altzayanca': '/Altzayancajpg.jpg',
+  'Apetatitlán de Antonio Carvajal': '/Apetatitlán de Antonio Carvajal.jpg',
+  'Apizaco': '/Apizacojpg.jpg',
+  'Benito Juárez': '/Benito Juárez.jpg',
+  'Calpulalpan': '/Calpulalpan.jpg',
+  'Contla de Juan Cuamatzi': '/Contla de Juan Cuamatzi.jpg',
+  'Cuapiaxtla': '/Cuapiaxtla.jpg',
+  'El Carmen Tequexquitla': '/El Carmen Tequexquitla.jpg',
+  'Emiliano Zapata': '/Emiliano Zapata.jpg',
+  'Españita': '/Españita.jpg',
+  'Huamantla': '/Huamantla.jpg',
+  'Hueyotlipan': '/Hueyotlipan.jpg',
+  'Ixtenco': '/ixtenco.jpg',
+  'Ixtacuixtla de Mariano Matamoros': '/xtacuixtla de Mariano Matamoros.jpeg',
+  'Mazatecochco de José María Morelos': '/Mazatecochco de José María Morelos.jpg',
+  'Muñoz de Domingo Arenas': '/Muñoz de Domingo Arenas.jpg',
+  'Nanacamilpa de Mariano Arista': '/luciernagas.jpg',
+  'Natívitas': '/Natívitas.jpg',
+  'Panotla': '/Panotla.jpg',
+  'Papalotla de Xicohténcatl': '/Papalotla de Xicohténcatl.jpg',
+  'San Damián Texoloc': '/San Damián Texóloc.jpg',
+  'San Francisco Tetlanohcan': '/San Francisco Tetlanohcan.jpg',
+  'San José Teacalco': '/San José Teacalco.jpg',
+  'San Juan Huactzinco': '/San Juan Huactzinco.jpg',
+  'San Lorenzo Axocomanitla': '/San Lorenzo Axocomanitla.jpeg',
+  'San Lucas Tecopilco': '/San Lucas Tecopilco.jpg',
+  'San Pablo del Monte': '/San Pablo del Monte.png',
+  'Santa Ana Nopalucan': '/Santa Ana Nopalucan.jpg',
+  'Santa Apolonia Teacalco': '/Santa Apolonia Teacalco.jpg',
+  'Santa Cruz Quilehtla': '/Santa Cruz Quilehtlajpg.jpg',
+  'Santa Cruz Tlaxcala': '/Santa Cruz Tlaxcala.jpg',
+  'Teolocholco': '/Teolocholco.jpg',
+  'Tepeyanco': '/Tepeyancojpg.jpg',
+  'Tetlatlahuca': '/Tetlatlahucajpeg.jpeg',
+  'Tlaxcala': '/Tlaxcala.jpg',
+  'Tlaxco': '/tlaxco.jpg',
+  'Tocatlán': '/Tocatlán.jpg',
+  'Totolac': '/Totolac.jpg',
+  'Tzompantepec': '/Tzompantepec.jpg',
+  'Xicohtzinco': '/Xicohtzincojpg.jpg',
+  'Yauhquemehcan': '/Yauhquemehcanjpg.jpg',
+  'Zacatelco': '/Zacatelco.jpg',
+};
+
 type Estacion = 'todas' | 'primavera' | 'verano' | 'otono' | 'invierno';
 
 const estaciones: Array<{ id: Estacion; label: string; emoji: string }> = [
@@ -86,48 +136,17 @@ const estaciones: Array<{ id: Estacion; label: string; emoji: string }> = [
 
 const obtenerEstacion = (texto: string): Estacion => {
   const valor = texto.toLowerCase();
-
-  if (valor.includes('todo el año') || valor.includes('todo')) {
-    return 'todas';
-  }
-
-  if (
-    valor.includes('primavera') ||
-    valor.includes('marzo') ||
-    valor.includes('abril') ||
-    valor.includes('mayo')
-  ) {
-    return 'primavera';
-  }
-
-  if (
-    valor.includes('verano') ||
-    valor.includes('junio') ||
-    valor.includes('julio') ||
-    valor.includes('agosto')
-  ) {
-    return 'verano';
-  }
-
-  if (
-    valor.includes('otoño') ||
-    valor.includes('septiembre') ||
-    valor.includes('octubre') ||
-    valor.includes('noviembre')
-  ) {
-    return 'otono';
-  }
-
-  if (
-    valor.includes('invierno') ||
-    valor.includes('diciembre') ||
-    valor.includes('enero') ||
-    valor.includes('febrero')
-  ) {
-    return 'invierno';
-  }
-
+  if (valor.includes('todo el año') || valor.includes('todo')) return 'todas';
+  if (valor.includes('primavera') || valor.includes('marzo') || valor.includes('abril') || valor.includes('mayo')) return 'primavera';
+  if (valor.includes('verano') || valor.includes('junio') || valor.includes('julio') || valor.includes('agosto')) return 'verano';
+  if (valor.includes('otoño') || valor.includes('septiembre') || valor.includes('octubre') || valor.includes('noviembre')) return 'otono';
+  if (valor.includes('invierno') || valor.includes('diciembre') || valor.includes('enero') || valor.includes('febrero')) return 'invierno';
   return 'todas';
+};
+
+const obtenerImagenMunicipio = (municipio: string, imagen?: string) => {
+  const src = imagen ?? imagenesMunicipio[municipio] ?? imagenPorDefecto;
+  return encodeURI(src);
 };
 
 export default function MunicipiosUnicos() {
@@ -139,7 +158,8 @@ export default function MunicipiosUnicos() {
       m.municipio.toLowerCase().includes(busqueda.toLowerCase()) ||
       m.lugarUnico.toLowerCase().includes(busqueda.toLowerCase()) ||
       m.descripcion.toLowerCase().includes(busqueda.toLowerCase()) ||
-      m.mejorEpoca.toLowerCase().includes(busqueda.toLowerCase());
+      m.mejorEpoca.toLowerCase().includes(busqueda.toLowerCase()) ||
+      m.feriaFecha.toLowerCase().includes(busqueda.toLowerCase());
 
     const coincideEstacion =
       estacionSeleccionada === 'todas' || obtenerEstacion(m.mejorEpoca) === estacionSeleccionada;
@@ -202,57 +222,93 @@ export default function MunicipiosUnicos() {
           <div className="relative">
             <div className="absolute inset-y-0 left-0 w-10 bg-linear-to-r from-slate-950 to-transparent pointer-events-none z-10" />
             <div className="absolute inset-y-0 right-0 w-10 bg-linear-to-l from-slate-950 to-transparent pointer-events-none z-10" />
-            <div className="overflow-x-auto pb-4 scrollbar-thin scrollbar-track-slate-900 scrollbar-thumb-slate-700/70">
-              <div className="flex justify-center gap-4 md:gap-6 min-w-max px-2">
-              {filtrados.map((item) => (
-                <div 
-                  key={item.id}
-                  className="group w-70 sm:w-75 bg-linear-to-br from-slate-900 via-slate-900 to-slate-800/90 backdrop-blur-md rounded-3xl p-5 border border-slate-800/80 flex flex-col justify-between hover:border-sky-500/50 hover:-translate-y-1 transition-all duration-300 shadow-[0_20px_45px_rgba(2,8,23,0.35)]"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-[11px] font-bold text-sky-400 uppercase tracking-[0.24em]">
-                        Municipio #{item.id}
-                      </span>
-                      <span className="bg-slate-950/80 text-sky-300 border border-slate-700 px-2.5 py-1 rounded-full text-[11px] font-medium">
-                        ⭐ {item.mejorEpoca}
-                      </span>
-                    </div>
+            <div className="overflow-x-auto pb-6 scrollbar-thin scrollbar-track-slate-900 scrollbar-thumb-slate-700/70">
+              <div className="flex justify-start md:justify-center gap-6 min-w-max px-4">
+              {filtrados.map((item) => {
+                const imageSrc = obtenerImagenMunicipio(item.municipio, item.imagen);
 
-                    <div className="h-24 flex items-start">
-                      <h3 className="text-lg font-bold text-white leading-snug group-hover:text-sky-300 transition-colors">
-                        {item.municipio}
-                      </h3>
-                    </div>
+                return (
+                  <div 
+                    key={item.id}
+                    className="group w-80 bg-linear-to-b from-slate-900/90 via-slate-900 to-slate-950 rounded-3xl p-6 border border-slate-800/80 flex flex-col justify-between hover:border-sky-500/60 hover:shadow-[0_20px_50px_rgba(14,165,233,0.15)] hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden text-center"
+                  >
+                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-sky-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                    <div className="my-4 rounded-2xl border border-sky-900/40 bg-sky-950/30 p-3">
-                      <p className="text-[11px] text-sky-200 font-medium leading-relaxed">
-                        📍 <span className="text-sky-300">Lugar Único:</span> {item.lugarUnico}
+                    <div>
+                      {/* Imagen o Fallback del municipio */}
+                      <div className="mb-5 overflow-hidden rounded-3xl h-44 bg-slate-950 border border-slate-800 flex items-center justify-center relative">
+                        {imageSrc ? (
+                          <Image
+                            src={imageSrc}
+                            alt={`Imagen de ${item.municipio}`}
+                            width={320}
+                            height={220}
+                            className="w-full h-44 object-cover"
+                            onError={(e) => {
+                              // Oculta la imagen rota si el archivo no se encuentra en public
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-slate-500 gap-2">
+                            <Compass className="w-8 h-8 text-sky-500/40" />
+                            <span className="text-xs uppercase tracking-wider font-semibold">{item.municipio}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-[10px] font-bold tracking-[0.2em] text-sky-400 uppercase bg-sky-950/40 px-3 py-1 rounded-full border border-sky-900/40">
+                          N° {item.id}
+                        </span>
+                        <span className="bg-slate-950 text-sky-300 border border-slate-800 px-3 py-1 rounded-full text-[11px] font-medium flex items-center gap-1.5 shadow-inner">
+                          <Sparkles className="w-3 h-3 text-sky-400" />
+                          {item.mejorEpoca}
+                        </span>
+                      </div>
+
+                      <div className="mb-4">
+                        <h3 className="text-xl font-bold text-white tracking-tight leading-snug group-hover:text-sky-300 transition-colors">
+                          {item.municipio}
+                        </h3>
+                      </div>
+
+                      <div className="mb-4 rounded-2xl border border-sky-500/20 bg-sky-950/20 p-3.5 backdrop-blur-sm transition-colors group-hover:border-sky-500/40">
+                        <p className="text-xs text-sky-100 font-medium leading-relaxed flex items-start gap-2">
+                          <Compass className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
+                          <span><strong className="text-sky-300 font-semibold">Lugar Único:</strong> {item.lugarUnico}</span>
+                        </p>
+                      </div>
+
+                      <p className="text-slate-300 text-xs md:text-sm leading-relaxed mb-6 line-clamp-3">
+                        {item.descripcion}
                       </p>
                     </div>
 
-                    <p className="text-slate-300 text-sm leading-relaxed mb-4 line-clamp-4">
-                      {item.descripcion}
-                    </p>
-                  </div>
+                    <div className="border-t border-slate-800/80 pt-4 mt-auto">
+                      <div className="flex items-center justify-between text-xs mb-4">
+                        <span className="text-slate-400 flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                          Feria Patronal
+                        </span>
+                        <span className="text-sky-300 font-semibold text-right max-w-[140px] truncate" title={item.feriaFecha}>
+                          {item.feriaFecha}
+                        </span>
+                      </div>
 
-                  <div className="border-t border-slate-800/80 pt-4 mt-2">
-                    <div className="flex items-center justify-between text-[12px] text-slate-300 gap-2">
-                      <span className="font-semibold text-slate-400">📅 Feria Patronal</span>
-                      <span className="text-sky-300 font-bold text-right">{item.feriaFecha}</span>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.municipio}, Tlaxcala`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-sky-500/30 bg-sky-500/10 py-2.5 px-4 text-xs font-semibold text-sky-300 transition-all duration-200 hover:bg-sky-500 hover:text-slate-950 shadow-sm"
+                      >
+                        <MapPin className="h-4 w-4" />
+                        Ver en mapa
+                      </a>
                     </div>
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.municipio}, Tlaxcala`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-4 inline-flex items-center gap-2 rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-[12px] font-semibold text-sky-300 transition hover:bg-sky-500/20 hover:text-white"
-                    >
-                      <MapPin className="h-3.5 w-3.5" />
-                      Ver en mapa
-                    </a>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               </div>
             </div>
           </div>

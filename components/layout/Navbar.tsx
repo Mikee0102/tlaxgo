@@ -33,10 +33,7 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
           <a href="#hero" onClick={(e) => handleScrollTo(e, 'hero')} className="hover:text-sky-400 transition cursor-pointer">Inicio</a>
           <a href="#municipios" onClick={(e) => handleScrollTo(e, 'municipios')} className="text-sky-400 font-semibold hover:text-sky-300 transition cursor-pointer">Municipios</a>
-          <a href="#rutas" onClick={(e) => handleScrollTo(e, 'rutas')} className="hover:text-sky-400 transition cursor-pointer">Rutas</a>
-          
-          {/* NUEVAS RUTAS - Solo enlaces, sin estilos nuevos */}
-          <Link href="/itinerary" className="hover:text-sky-400 transition">Itinerario</Link>
+          <Link href="/explore" className="hover:text-sky-400 transition cursor-pointer">Lugares</Link>
         </nav>
 
         {/* Botón de Acción */}
@@ -66,12 +63,8 @@ export default function Navbar() {
           <a href="#hero" onClick={(e) => handleScrollTo(e, 'hero')} className="block text-slate-300 hover:text-sky-400 text-sm font-medium cursor-pointer">Inicio</a>
           <a href="#destinos" onClick={(e) => handleScrollTo(e, 'destinos')} className="block text-slate-300 hover:text-sky-400 text-sm font-medium cursor-pointer">Destinos</a>
           <a href="#municipios" onClick={(e) => handleScrollTo(e, 'municipios')} className="block text-sky-400 font-semibold text-sm cursor-pointer">Municipios</a>
-          <a href="#rutas" onClick={(e) => handleScrollTo(e, 'rutas')} className="block text-slate-300 hover:text-sky-400 text-sm font-medium cursor-pointer">Rutas</a>
-          
-          {/* NUEVAS RUTAS MÓVIL */}
-          <Link href="/favorites" className="block text-slate-300 hover:text-sky-400 text-sm font-medium">Favoritos</Link>
-          <Link href="/itinerary" className="block text-slate-300 hover:text-sky-400 text-sm font-medium">Itinerario</Link>
-          <Link href="/profile" className="block text-slate-300 hover:text-sky-400 text-sm font-medium">Perfil</Link>
+          <Link href="/explore" onClick={() => setIsOpen(false)} className="block text-slate-300 hover:text-sky-400 text-sm font-medium cursor-pointer">Lugares</Link>
+          <a href="/explore" onClick={(e) => handleScrollTo(e, 'lugares')} className="block text-slate-300 hover:text-sky-400 text-sm font-medium cursor-pointer">Lugares</a>
         </div>
       )}
     </header>
