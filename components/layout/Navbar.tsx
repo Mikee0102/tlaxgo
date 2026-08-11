@@ -32,7 +32,6 @@ export default function Navbar() {
         {/* Enlaces de Escritorio */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
           <a href="#hero" onClick={(e) => handleScrollTo(e, 'hero')} className="hover:text-sky-400 transition cursor-pointer">Inicio</a>
-          <a href="#destinos" onClick={(e) => handleScrollTo(e, 'destinos')} className="hover:text-sky-400 transition cursor-pointer">Destinos</a>
           <a href="#municipios" onClick={(e) => handleScrollTo(e, 'municipios')} className="text-sky-400 font-semibold hover:text-sky-300 transition cursor-pointer">Municipios</a>
           <Link href="/explore" className="hover:text-sky-400 transition cursor-pointer">Lugares</Link>
         </nav>
