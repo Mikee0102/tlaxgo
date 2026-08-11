@@ -19,8 +19,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+<<<<<<< Updated upstream
     <html lang="es">
       <body className={poppins.variable}>
+=======
+    <html lang="es" data-scroll-behavior="smooth">
+      <body
+        className={`${poppins.variable} font-sans antialiased`}
+        suppressHydrationWarning
+      >
+>>>>>>> Stashed changes
         {children}
       </body>
     </html>
