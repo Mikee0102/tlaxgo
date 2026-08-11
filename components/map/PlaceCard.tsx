@@ -1,6 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Place } from '../../types/place';
+import { getPlaceImages } from '../../utils/imageHelper';
+import { Heart, Navigation, MapPin, Share2, Check } from 'lucide-react';
 
 interface PlaceCardProps {
   place: Place | null;
@@ -8,71 +11,155 @@ interface PlaceCardProps {
 }
 
 export default function PlaceCard({ place, onClose }: PlaceCardProps) {
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    if (place) {
+      const savedFavorites = JSON.parse(localStorage.getItem('tlaxgo_favorites') || '[]');
+      setIsFavorite(savedFavorites.some((fav: Place) => fav.id === place.id));
+      setCurrentImageIndex(0);
+    }
+  }, [place]);
+
   if (!place) return null;
 
-  return (
-    <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 bg-white rounded-xl shadow-lg border border-slate-100 p-5 z-[9999] transition-all duration-300">
-      {/* Botón Cerrar */}
-      <button
-        onClick={onClose}
-        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors"
-        aria-label="Cerrar detalles"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+  // Obtener imágenes específicas para este lugar
+  const placeImages = getPlaceImages(place);
 
-      {/* Categoría e Indicador */}
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-blue-50 text-blue-700 capitalize">
-          {place.category}
-        </span>
-        {place.rating && (
-          <div className="flex items-center gap-1 text-amber-500 text-xs font-bold">
-            <span>⭐</span>
-            <span>{place.rating}</span>
+  const toggleFavorite = () => {
+    const savedFavorites: Place[] = JSON.parse(localStorage.getItem('tlaxgo_favorites') || '[]');
+    let updatedFavorites: Place[];
+
+    if (isFavorite) {
+      updatedFavorites = savedFavorites.filter((fav) => fav.id !== place.id);
+    } else {
+      updatedFavorites = [...savedFavorites, place];
+    }
+
+    localStorage.setItem('tlaxgo_favorites', JSON.stringify(updatedFavorites));
+    setIsFavorite(!isFavorite);
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: place.name,
+      text: `¡Mira este lugar en Tlaxcala!: ${place.name}`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log('Error al compartir:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}`;
+
+  return (
+    <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 bg-slate-950/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-800 p-4 z-[9999] transition-all duration-300 text-slate-200 overflow-hidden">
+      
+      {/* Galería de Imágenes Dinámica */}
+      <div className="relative w-full h-36 rounded-xl overflow-hidden mb-3 bg-slate-900">
+        <img
+          src={placeImages[currentImageIndex] || placeImages[0]}
+          alt={place.name}
+          className="w-full h-full object-cover transition-all duration-300"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src =
+              'https://images.unsplash.com/photo-1512813195386-6cf811ad3542?auto=format&fit=crop&w=600&q=80';
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
+
+        {/* Puntos de Navegación (solamente si existen múltiples imágenes) */}
+        {placeImages.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {placeImages.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentImageIndex(idx)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  currentImageIndex === idx ? 'bg-sky-400 w-4' : 'bg-white/50'
+                }`}
+              />
+            ))}
           </div>
         )}
+
+        {/* Botones de Acción Superiores */}
+        <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+          <button
+            onClick={handleShare}
+            className="p-1.5 rounded-full bg-slate-950/60 backdrop-blur-md border border-slate-800 text-slate-300 hover:text-white transition"
+            title="Compartir"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+          </button>
+          
+          <button
+            onClick={toggleFavorite}
+            className={`p-1.5 rounded-full backdrop-blur-md border transition ${
+              isFavorite
+                ? 'bg-rose-500/20 border-rose-500/40 text-rose-500'
+                : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:text-white'
+            }`}
+          >
+            <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-rose-500' : ''}`} />
+          </button>
+
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full bg-slate-950/60 backdrop-blur-md border border-slate-800 text-slate-300 hover:text-white transition"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
 
-      {/* Título */}
-      <h3 className="font-bold text-lg text-slate-800 pr-6 leading-snug">
+      {/* Categoría y Título */}
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-950 text-sky-400 border border-sky-900/60">
+          {place.category}
+        </span>
+      </div>
+
+      <h3 className="font-black text-base text-white leading-tight mb-1">
         {place.name}
       </h3>
 
-      {/* Descripción */}
-      <p className="text-sm text-slate-500 mt-2 line-clamp-3 leading-relaxed">
+      <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
         {place.description}
       </p>
 
-      {/* Detalles Adicionales (Dirección, Teléfono, Web) */}
-      <div className="mt-4 space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
-        {place.address && (
-          <div className="flex items-start gap-2">
-            <span className="text-base">📍</span>
-            <span className="leading-tight">{place.address}</span>
-          </div>
-        )}
-        {place.phone && (
-          <div className="flex items-center gap-2">
-            <span className="text-base">📞</span>
-            <span>{place.phone}</span>
-          </div>
-        )}
-        {place.website && (
-          <div className="flex items-center gap-2">
-            <span className="text-base">🌐</span>
-            <a
-              href={place.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline truncate"
-            >
-              Visitar sitio web
-            </a>
-          </div>
-        )}
+      {/* Dirección */}
+      {place.address && (
+        <div className="mt-2 flex items-start gap-1.5 text-xs text-slate-300">
+          <MapPin className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
+          <span className="truncate">{place.address}</span>
+        </div>
+      )}
+
+      {/* Botón Cómo Llegar */}
+      <div className="mt-3 pt-2 border-t border-slate-900">
+        <a
+          href={googleMapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold py-2 rounded-full transition shadow-lg shadow-sky-500/20 flex items-center justify-center gap-1.5"
+        >
+          <Navigation className="w-3.5 h-3.5" /> Cómo llegar
+        </a>
       </div>
     </div>
   );
