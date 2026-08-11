@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Place } from '../../types/place';
+import { getPlaceImages } from '../../utils/imageHelper';
 import { Heart, Navigation, MapPin, Share2, Check } from 'lucide-react';
 
 interface PlaceCardProps {
@@ -14,12 +15,6 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
   const [copied, setCopied] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Imágenes por defecto si el atractivo no cuenta con fotos propias
-  const sampleImages = [
-    'https://images.unsplash.com/photo-1512813195386-6cf811ad3542?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=600&q=80',
-  ];
-
   useEffect(() => {
     if (place) {
       const savedFavorites = JSON.parse(localStorage.getItem('tlaxgo_favorites') || '[]');
@@ -29,6 +24,9 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
   }, [place]);
 
   if (!place) return null;
+
+  // Obtener imágenes específicas para este lugar
+  const placeImages = getPlaceImages(place);
 
   const toggleFavorite = () => {
     const savedFavorites: Place[] = JSON.parse(localStorage.getItem('tlaxgo_favorites') || '[]');
@@ -44,7 +42,6 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
     setIsFavorite(!isFavorite);
   };
 
-  // Función para Compartir Lugar
   const handleShare = async () => {
     const shareData = {
       title: place.name,
@@ -70,29 +67,35 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
   return (
     <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 bg-slate-950/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-800 p-4 z-[9999] transition-all duration-300 text-slate-200 overflow-hidden">
       
-      {/* Galería Ligera de Imágenes */}
+      {/* Galería de Imágenes Dinámica */}
       <div className="relative w-full h-36 rounded-xl overflow-hidden mb-3 bg-slate-900">
         <img
-          src={sampleImages[currentImageIndex]}
+          src={placeImages[currentImageIndex] || placeImages[0]}
           alt={place.name}
           className="w-full h-full object-cover transition-all duration-300"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src =
+              'https://images.unsplash.com/photo-1512813195386-6cf811ad3542?auto=format&fit=crop&w=600&q=80';
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
 
-        {/* Puntos de Navegación de la Galería */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-          {sampleImages.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentImageIndex(idx)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                currentImageIndex === idx ? 'bg-sky-400 w-4' : 'bg-white/50'
-              }`}
-            />
-          ))}
-        </div>
+        {/* Puntos de Navegación (solamente si existen múltiples imágenes) */}
+        {placeImages.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {placeImages.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentImageIndex(idx)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  currentImageIndex === idx ? 'bg-sky-400 w-4' : 'bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
-        {/* Acciones Superiores sobre la Foto */}
+        {/* Botones de Acción Superiores */}
         <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
           <button
             onClick={handleShare}
@@ -147,7 +150,7 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
         </div>
       )}
 
-      {/* Botón de Navegación */}
+      {/* Botón Cómo Llegar */}
       <div className="mt-3 pt-2 border-t border-slate-900">
         <a
           href={googleMapsUrl}
