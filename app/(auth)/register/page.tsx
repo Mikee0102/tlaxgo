@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 "use client";
 
 import { FormEvent, useState } from "react";
@@ -125,4 +123,4 @@ export default function RegisterPage() {
     </main>
   );
 }
->>>>>>> Stashed changes
+

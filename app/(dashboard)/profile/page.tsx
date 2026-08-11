@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 "use client";
 
 import { useEffect, useState } from "react";
@@ -217,6 +215,59 @@ export default function ProfilePage() {
                   @{profile.username}
                 </p>
               )}
+'use client';
+
+import { useState } from 'react';
+import { User, Settings, MapPin, Heart, Clock, Award, Edit, Save, X } from 'lucide-react';
+
+interface UserProfile {
+  name: string;
+  email: string;
+  bio: string;
+  location: string;
+  joinDate: string;
+  travels: number;
+  favorites: number;
+  reviews: number;
+}
+
+export default function ProfilePage() {
+  const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState<UserProfile>({
+    name: 'Juan Delgado',
+    email: 'juan.delgado@email.com',
+    bio: 'Apasionado por los viajes y la aventura. Me encanta explorar nuevos lugares y culturas.',
+    location: 'Ciudad de México, México',
+    joinDate: '2024-01-15',
+    travels: 12,
+    favorites: 45,
+    reviews: 28
+  });
+
+  const [editForm, setEditForm] = useState(profile);
+
+  const handleSave = () => {
+    setProfile(editForm);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditForm(profile);
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Profile Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <MapPin className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Viajes realizados</p>
+              <p className="text-2xl font-bold text-gray-900">{profile.travels}</p>
             </div>
           </div>
         </div>
@@ -575,4 +626,5 @@ export default function ProfilePage() {
     </div>
   );
 }
->>>>>>> Stashed changes
+
+
