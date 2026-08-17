@@ -1,30 +1,15 @@
 import { createClient } from "@/lib/supabase/client";
+import { UserProfile } from "@/types/user";
 
-export async function signIn(
-  email: string,
-  password: string,
-) {
+export async function signInWithGoogle() {
   const supabase = createClient();
-
-  return await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-}
-
-export async function signUp(
-  email: string,
-  password: string,
-  fullName: string,
-) {
-  const supabase = createClient();
-
-  return await supabase.auth.signUp({
-    email,
-    password,
+  return await supabase.auth.signInWithOAuth({
+    provider: "google",
     options: {
-      data: {
-        full_name: fullName,
+      redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
+      queryParams: {
+        prompt: "select_account",
+        access_type: "offline",
       },
     },
   });
@@ -32,24 +17,20 @@ export async function signUp(
 
 export async function signOut() {
   const supabase = createClient();
-
-  return await supabase.auth.signOut({
-    scope: "local",
-  });
+  return await supabase.auth.signOut();
 }
 
-export async function resetPassword(email: string) {
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   const supabase = createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
 
-  return await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/update-password`,
-  });
-}
-
-export async function updatePassword(password: string) {
-  const supabase = createClient();
-
-  return await supabase.auth.updateUser({
-    password,
-  });
+  if (error) {
+    console.error("Error al obtener perfil:", error.message);
+    return null;
+  }
+  return data as UserProfile;
 }

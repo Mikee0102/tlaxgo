@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
-import "./globals.css"; // <-- Asegúrate de que esté importado
+
+import { AuthProvider } from "@/providers/auth-provider";
+import "./globals.css";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -24,7 +26,7 @@ export default function RootLayout({
         className={`${poppins.variable} font-sans antialiased`}
         suppressHydrationWarning
       >
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
