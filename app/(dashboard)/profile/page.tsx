@@ -1,5 +1,4 @@
 "use client";
-"use client";
 
 import { useEffect, useState } from "react";
 import {
@@ -14,9 +13,7 @@ import {
   X,
 } from "lucide-react";
 
-import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-<<<<<<< HEAD
 import {
   getMyProfile,
   updateMyProfile,
@@ -164,130 +161,23 @@ export default function ProfilePage() {
           <Loader2 className="w-5 h-5 animate-spin" />
           Cargando perfil...
         </div>
-=======
-import { getMyProfile, updateMyProfile } from "@/services/profile.service";
-
-interface UserProfile {
-  name: string;
-  email: string;
-  bio: string;
-  location: string;
-  joinDate: string;
-  travels: number;
-  favorites: number;
-  reviews: number;
-}
-import { Loader2 } from "lucide-react";
-
-export default function ProfilePage() {
-  const { user, loading } = useAuth();
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const [profile, setProfile] = useState<UserProfile>({
-    name: "",
-    email: "",
-    bio: "",
-    location: "",
-    joinDate: "",
-    travels: 0,
-    favorites: 0,
-    reviews: 0,
-  });
-
-  const [editForm, setEditForm] = useState(profile);
-
-  useEffect(() => {
-    async function loadProfile() {
-      if (!user) return;
-
-      try {
-        const { profile: data } = await getMyProfile();
-
-        const loadedProfile: UserProfile = {
-          name:
-            data?.full_name ??
-            user.user_metadata?.full_name ??
-            user.user_metadata?.name ??
-            "",
-          email: user.email ?? "",
-          bio: data?.bio ?? "",
-          location: user.user_metadata?.location ?? "",
-          joinDate:
-            data?.updated_at ??
-            user.created_at ??
-            "",
-          travels: 0,
-          favorites: 0,
-          reviews: 0,
-        };
-
-        setProfile(loadedProfile);
-        setEditForm(loadedProfile);
-      } catch (error) {
-        console.error("Error al cargar el perfil:", error);
-      }
-    }
-
-    if (!loading) {
-      loadProfile();
-    }
-  }, [user, loading]);
-
-  const handleSave = async () => {
-    if (!user) return;
-
-    try {
-      setSaving(true);
-
-      await updateMyProfile({
-        full_name: editForm.name,
-        bio: editForm.bio,
-      });
-
-      setProfile(editForm);
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Error al actualizar el perfil:", error);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setEditForm(profile);
-    setIsEditing(false);
-  };
-
-  if (loading) {
-  const { user, loading: authLoading } = useAuth();
-  const [isLoading] = useState(false);
-
-  if (authLoading || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Cargando perfil...</p>
->>>>>>> 51a9ceef1b5c630613c0ff5cd4395dbcdf1fcccc
       </div>
     );
   }
 
-<<<<<<< HEAD
   /*
    * Usuario no autenticado
    */
-=======
->>>>>>> 51a9ceef1b5c630613c0ff5cd4395dbcdf1fcccc
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Debes iniciar sesión para ver tu perfil.</p>
+        <p className="text-gray-500">
+          Debes iniciar sesión para ver tu perfil.
+        </p>
       </div>
     );
   }
 
-<<<<<<< HEAD
   /*
    * Perfil
    */
@@ -343,11 +233,6 @@ export default function ProfilePage() {
         )}
 
         {/* ESTADÍSTICAS */}
-=======
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
->>>>>>> 51a9ceef1b5c630613c0ff5cd4395dbcdf1fcccc
 
         {/* Estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -645,7 +530,7 @@ export default function ProfilePage() {
                 </p>
               </div>
 
-              <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-300">
+              <button className="relative inline-flex h-6 w-11 items-center roundcded-full bg-gray-300">
                 <span className="inline-block h-4 w-4 transform rounded-full bg-white" />
               </button>
 
@@ -653,11 +538,8 @@ export default function ProfilePage() {
 
           </div>
 
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h1 className="text-2xl font-bold">{user.user_metadata?.full_name || "Usuario"}</h1>
-          <p className="text-gray-500">{user.email}</p>
         </div>
+
       </div>
     </div>
   );
