@@ -1,4 +1,5 @@
 "use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import {
@@ -13,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 <<<<<<< HEAD
 import {
@@ -175,6 +177,7 @@ interface UserProfile {
   favorites: number;
   reviews: number;
 }
+import { Loader2 } from "lucide-react";
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
@@ -258,6 +261,10 @@ export default function ProfilePage() {
   };
 
   if (loading) {
+  const { user, loading: authLoading } = useAuth();
+  const [isLoading] = useState(false);
+
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-500">Cargando perfil...</p>
@@ -275,9 +282,7 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">
-          Debes iniciar sesión para ver tu perfil.
-        </p>
+        <p className="text-gray-500">Debes iniciar sesión para ver tu perfil.</p>
       </div>
     );
   }
@@ -648,8 +653,11 @@ export default function ProfilePage() {
 
           </div>
 
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h1 className="text-2xl font-bold">{user.user_metadata?.full_name || "Usuario"}</h1>
+          <p className="text-gray-500">{user.email}</p>
         </div>
-
       </div>
     </div>
   );
