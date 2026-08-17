@@ -148,19 +148,10 @@ export default function Lugares() {
                   <h3 className="text-2xl font-bold text-white group-hover:text-sky-400 transition-colors mb-3">
                     {item.nombre}
                   </h3>
-                  <p className="text-slate-300 text-sm leading-relaxed mb-6">
+                  <p className="text-slate-300 text-sm leading-relaxed">
                     {item.descripcion}
                   </p>
                 </div>
-
-                <a
-                  href={`/municipios/${item.id}`}
-                  onClick={(e) => handleNavigate(e, `/municipios/${item.id}`)}
-                  className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-sky-400 hover:text-sky-300 transition"
-                >
-                  Ver Guía Completa 
-                  <span className="transform group-hover:translate-x-1 transition-transform">&rarr;</span>
-                </a>
               </div>
             </div>
           ))}

@@ -187,16 +187,6 @@ export default function Rutas() {
                 </div>
               </div>
 
-              <div className="px-8 pb-8 pt-0">
-                <a
-                  href={`/rutas/${ruta.id}`}
-                  onClick={(e) => handleNavigate(e, `/rutas/${ruta.id}`)}
-                  className="w-full py-3.5 px-6 rounded-2xl bg-slate-950 text-slate-200 border border-slate-800 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-sky-500 hover:text-slate-950 hover:border-sky-500 transition-all duration-300"
-                >
-                  Ver Itinerario Completo
-                  <span>&rarr;</span>
-                </a>
-              </div>
             </div>
           ))}
         </div>
