@@ -21,10 +21,15 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    const result = await signIn(email, password);
 
-    if (error) {
-      setError("Correo o contraseña incorrectos.");
+    // Log para depuración: inspecciona en la consola del navegador
+    // (elimina antes de pasar a producción)
+    // eslint-disable-next-line no-console
+    console.log('signIn result:', result);
+
+    if (result.error) {
+      setError(result.error.message ?? "Correo o contraseña incorrectos.");
       setLoading(false);
       return;
     }

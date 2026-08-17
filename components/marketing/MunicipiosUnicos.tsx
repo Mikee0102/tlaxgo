@@ -144,9 +144,26 @@ const obtenerEstacion = (texto: string): Estacion => {
   return 'todas';
 };
 
+const slugify = (text: string) => {
+  return text
+    .normalize('NFD') // descomponer acentos
+    .replace(/\p{Diacritic}/gu, '') // eliminar diacríticos
+    .replace(/[^a-zA-Z0-9\s-]/g, '') // quitar caracteres no alfanuméricos
+    .trim()
+    .replace(/\s+/g, '-')
+    .toLowerCase();
+};
+
 const obtenerImagenMunicipio = (municipio: string, imagen?: string) => {
-  const src = imagen ?? imagenesMunicipio[municipio] ?? imagenPorDefecto;
-  return encodeURI(src);
+  // Prioridad: imagen explícita > mapping conocido > slug en carpeta /municipios/ > imagen por defecto
+  if (imagen) return encodeURI(imagen);
+
+  const mapped = imagenesMunicipio[municipio];
+  if (mapped) return encodeURI(mapped);
+
+  const slug = slugify(municipio);
+  const candidate = `/municipios/${slug}.jpg`;
+  return encodeURI(candidate || imagenPorDefecto);
 };
 
 export default function MunicipiosUnicos() {
@@ -291,7 +308,11 @@ export default function MunicipiosUnicos() {
                           <Calendar className="w-3.5 h-3.5 text-slate-500" />
                           Feria Patronal
                         </span>
-                        <span className="text-sky-300 font-semibold text-right max-w-[140px] truncate" title={item.feriaFecha}>
+                        <span
+                          className="text-sky-300 font-semibold text-right"
+                          title={item.feriaFecha}
+                          aria-label={`Fecha: ${item.feriaFecha}`}
+                        >
                           {item.feriaFecha}
                         </span>
                       </div>
