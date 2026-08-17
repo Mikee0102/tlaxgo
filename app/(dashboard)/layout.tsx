@@ -6,7 +6,6 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-
   const supabase = await createClient();
 
   const { data } = await supabase.auth.getClaims();
@@ -14,7 +13,7 @@ export default async function DashboardLayout({
   if (!data?.claims) {
     redirect("/login");
   }
+ 
 
   return <>{children}</>;
 }
-

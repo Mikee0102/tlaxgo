@@ -1,27 +1,9 @@
 import { Place, PlaceCategory } from '../types/place';
 
-// Coordenadas aproximadas que encierran al Estado de Tlaxcala (Bounding Box)
-// Formato Overpass: (sur, oeste, norte, este)
-const TLAXCALA_BBOX = '19.09,-98.63,19.74,-97.90';
+const TLAXCALA_BBOX = '19.1000,-98.5000,19.6000,-97.9000';
 
-// Mapa de etiquetas de OpenStreetMap a nuestras categorías de TlaxGo
-const CATEGORY_MAPPING: Record<string, PlaceCategory> = {
-  museum: 'museum',
-  arts_centre: 'museum',
-  place_of_worship: 'church',
-  park: 'park',
-  viewpoint: 'viewpoint',
-  restaurant: 'restaurant',
-  cafe: 'restaurant',
-  hotel: 'hotel',
-  guest_house: 'hotel',
-};
-
-/**
- * Determina la categoría de TlaxGo basándose en las etiquetas de OpenStreetMap
- */
-function getCategoryFromTags(tags: Record<string, string>): PlaceCategory {
-  if (tags.tourism === 'museum' || tags.amenity === 'arts_centre') return 'museum';
+function mapOsmTagToCategory(tags: Record<string, string>): PlaceCategory {
+  if (tags.tourism === 'museum') return 'museum';
   if (tags.amenity === 'place_of_worship') return 'church';
   if (tags.leisure === 'park') return 'park';
   if (tags.tourism === 'viewpoint') return 'viewpoint';
@@ -30,9 +12,6 @@ function getCategoryFromTags(tags: Record<string, string>): PlaceCategory {
   return 'other';
 }
 
-/**
- * Consulta la Overpass API para obtener lugares turísticos en Tlaxcala
- */
 export async function fetchPlacesFromOverpass(): Promise<Place[]> {
   const query = `
     [out:json][timeout:25];
@@ -53,44 +32,46 @@ export async function fetchPlacesFromOverpass(): Promise<Place[]> {
   try {
     const response = await fetch(url);
     
-    // Si el servidor de Overpass da Timeout (504) o falla, devolvemos un array vacío
-    // en lugar de lanzar una excepción que tire la aplicación.
     if (!response.ok) {
-      console.warn(`Overpass API respondió con estado: ${response.status}. Usando fallback vacío.`);
-      return getFallbackPlaces(); // Retornamos datos de prueba locales para que puedas seguir desarrollando
+      console.warn(`Overpass API respondió con estado: ${response.status}. Usando fallback local.`);
+      return getFallbackPlaces();
     }
 
     const data = await response.json();
     if (!data.elements) return getFallbackPlaces();
 
-    return data.elements.map((element: any) => {
-      const tags = element.tags || {};
-      const lat = element.lat ?? element.center?.lat;
-      const lon = element.lon ?? element.center?.lon;
+    return data.elements
+      .map((element: any) => {
+        const tags = element.tags || {};
+        const lat = element.lat ?? element.center?.lat;
+        const lon = element.lon ?? element.center?.lon;
+        const category = mapOsmTagToCategory(tags);
 
-      return {
-        id: String(element.id),
-        name: tags.name || tags.official_name || 'Lugar sin nombre',
-        lat: Number(lat),
-        lon: Number(lon),
-        category: getCategoryFromTags(tags),
-        address: tags['addr:street'] 
-          ? `${tags['addr:street']} ${tags['addr:housenumber'] || ''}`.trim() 
-          : undefined,
-        phone: tags.phone || tags['contact:phone'] || undefined,
-        website: tags.website || tags['contact:website'] || undefined,
-        rating: 4.5, 
-        description: tags.description || `Un hermoso lugar de interés ubicado en Tlaxcala.`,
-      };
-    }).filter((place: Place) => place.name !== 'Lugar sin nombre' && !isNaN(place.lat) && !isNaN(place.lon));
+        return {
+          id: String(element.id),
+          name: tags.name || tags.official_name || 'Lugar sin nombre',
+          lat: Number(lat),
+          lon: Number(lon),
+          category: category,
+          address: tags['addr:street']
+            ? `${tags['addr:street']} ${tags['addr:housenumber'] || ''}`.trim()
+            : undefined,
+          phone: tags.phone || tags['contact:phone'] || undefined,
+          website: tags.website || tags['contact:website'] || undefined,
+          rating: 4.5,
+          description: tags.description || `Un hermoso punto turistico ubicado en Tlaxcala.`,
+          image: tags.image || tags['wikimedia_commons'] || undefined,
+          wikipedia: tags.wikipedia || undefined,
+        };
+      })
+      .filter((place: Place) => place.name !== 'Lugar sin nombre' && !isNaN(place.lat) && !isNaN(place.lon));
 
   } catch (error) {
-    console.error('Error de red al conectar con Overpass API. Usando fallback vacío:', error);
-    return getFallbackPlaces(); 
+    console.error('Error al conectar con Overpass API. Usando fallback local:', error);
+    return getFallbackPlaces();
   }
 }
 
-// Función auxiliar para que tu mapa nunca se quede vacío si la API externa falla
 function getFallbackPlaces(): Place[] {
   return [
     {
@@ -100,7 +81,8 @@ function getFallbackPlaces(): Place[] {
       lon: -98.2396,
       category: 'park',
       description: 'Plaza principal de la ciudad de Tlaxcala, rodeada de edificios coloniales históricos.',
-      address: 'Portal de Hidalgo, Centro, Tlaxcala'
+      address: 'Portal de Hidalgo, Centro, Tlaxcala',
+      wikipedia: 'es:Plaza de la Constitución (Tlaxcala)',
     },
     {
       id: 'fb-2',
@@ -109,7 +91,8 @@ function getFallbackPlaces(): Place[] {
       lon: -98.2385,
       category: 'museum',
       description: 'Espacio dedicado a la difusión de las artes visuales del estado.',
-      address: 'Plaza de la Constitución 21, Centro, Tlaxcala'
-    }
+      address: 'Plaza de la Constitución 21, Centro, Tlaxcala',
+    },
   ];
 }
+
