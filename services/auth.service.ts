@@ -18,8 +18,10 @@ export async function signUp(
     email,
     password,
     options: {
-      data: {
-        full_name: fullName,
+      redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
+      queryParams: {
+        prompt: "select_account",
+        access_type: "offline",
       },
     },
   });
