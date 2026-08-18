@@ -2,6 +2,10 @@ import { createClient } from '@/lib/supabase/client';
 
 const supabase = createClient();
 
+// ============================================
+// FUNCIONES EXISTENTES
+// ============================================
+
 export async function signIn(email: string, password: string) {
   return supabase.auth.signInWithPassword({
     email,
@@ -64,3 +68,37 @@ export const authService = {
   getCurrentUser,
   getSession,
 };
+
+// ============================================
+// FUNCIONES ADICIONALES PARA EL AUTH-PROVIDER
+// ============================================
+
+export const getUserProfile = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  
+  if (error) {
+    console.error('Error al obtener perfil:', error);
+    return null;
+  }
+  return data;
+};
+
+export const loginWithGoogle = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`
+    }
+  });
+  
+  if (error) {
+    console.error('Error al iniciar con Google:', error);
+    throw error;
+  }
+};
+
+export const signInWithGoogle = loginWithGoogle;
