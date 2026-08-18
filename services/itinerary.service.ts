@@ -1,304 +1,209 @@
-import { createClient } from '@/lib/supabase/client';
-
-const supabase = createClient();
-
-// ============================================================
-// TIPOS
-// ============================================================
-
-export interface Itinerary {
-  id: string;
-  user_id: string;
-  title: string;
-  description?: string;
-  start_date?: string;
-  end_date?: string;
-  status: 'planned' | 'active' | 'completed' | 'cancelled';
-  created_at: string;
-  updated_at: string;
-  days: ItineraryDay[];
-}
-
-export interface ItineraryDay {
-  id: string;
-  itinerary_id: string;
-  date: string;
-  title?: string;
-  items: ItineraryItem[];
-}
-
-export interface ItineraryItem {
-  id: string;
-  day_id: string;
-  place_id?: string;
-  title: string;
-  start_time?: string;
-  duration_minutes?: number;
-  notes?: string;
-  position: number;
-}
-
-// ============================================================
-// SERVICIOS
-// ============================================================
+import { createClient } from "@/lib/supabase/client";
+import { Itinerary } from "@/types/itinerary";
 
 export const itineraryService = {
-  // ==========================================================
-  // 1. OBTENER ITINERARIO COMPLETO
-  // ==========================================================
-  async getFullItinerary(itineraryId: string): Promise<Itinerary | null> {
-    // 1. Obtener el itinerario
-    const { data: itinerary, error: itineraryError } = await supabase
-      .from('itineraries')
-      .select('*')
-      .eq('id', itineraryId)
-      .single();
-
-    if (itineraryError) throw itineraryError;
-    if (!itinerary) return null;
-
-    // 2. Obtener los días
-    const { data: days, error: daysError } = await supabase
-      .from('itinerary_days')
-      .select('*')
-      .eq('itinerary_id', itineraryId)
-      .order('date', { ascending: true });
-
-    if (daysError) throw daysError;
-
-    // 3. Obtener los items de cada día
-    const daysWithItems = await Promise.all(
-      (days || []).map(async (day) => {
-        const { data: items, error: itemsError } = await supabase
-          .from('itinerary_items')
-          .select('*')
-          .eq('day_id', day.id)
-          .order('position', { ascending: true });
-
-        if (itemsError) throw itemsError;
-        return { ...day, items: items || [] };
-      })
-    );
-
-    return { ...itinerary, days: daysWithItems };
-  },
-
-  // ==========================================================
-  // 2. OBTENER TODOS LOS ITINERARIOS DEL USUARIO
-  // ==========================================================
-  async getUserItineraries(userId: string): Promise<Itinerary[]> {
-    const { data, error } = await supabase
-      .from('itineraries')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+  // READ ALL
+  async getItineraries(userId?: string): Promise<Itinerary[]> {
+    const supabase = createClient();
+    
+    const { data: itineraries, error } = await supabase
+      .from("itineraries")
+      .select(`
+        *,
+        itinerary_days (
+          *,
+          itinerary_items (*)
+        )
+      `)
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return data || [];
+
+    let favoriteIds = new Set<string>();
+    if (userId) {
+      const { data: favs } = await supabase
+        .from("itinerary_favorites")
+        .select("itinerary_id")
+        .eq("user_id", userId);
+      
+      favoriteIds = new Set(favs?.map((f) => f.itinerary_id) || []);
+    }
+
+    return (itineraries || []).map((it) => ({
+      ...it,
+      is_favorite: favoriteIds.has(it.id),
+      itinerary_days: (it.itinerary_days || []).sort(
+        (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      ),
+    })) as Itinerary[];
   },
 
-  // ==========================================================
-  // 3. CREAR ITINERARIO
-  // ==========================================================
-  async createItinerary(
-    userId: string,
-    title: string,
-    description?: string,
-    start_date?: string,
-    end_date?: string
-  ): Promise<Itinerary> {
+  // READ ONE
+  async getItineraryById(id: string): Promise<Itinerary | null> {
+    const supabase = createClient();
     const { data, error } = await supabase
-      .from('itineraries')
+      .from("itineraries")
+      .select(`
+        *,
+        itinerary_days (
+          *,
+          itinerary_items (*)
+        )
+      `)
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+    return data as Itinerary;
+  },
+
+  // CREATE
+  async createFullItinerary(
+    userId: string,
+    data: {
+      title: string;
+      description: string;
+      start_date: string;
+      end_date: string;
+      days: { date: string; title: string; items: { title: string; start_time: string; duration_minutes: number; notes: string }[] }[];
+    }
+  ) {
+    const supabase = createClient();
+
+    const { data: itData, error: itError } = await supabase
+      .from("itineraries")
       .insert({
         user_id: userId,
-        title,
-        description,
-        start_date,
-        end_date,
-        status: 'planned'
+        title: data.title,
+        description: data.description,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        status: "planned",
       })
       .select()
       .single();
 
-    if (error) throw error;
-    return { ...data, days: [] };
+    if (itError) throw itError;
+
+    for (const day of data.days) {
+      const { data: dayData, error: dayError } = await supabase
+        .from("itinerary_days")
+        .insert({
+          itinerary_id: itData.id,
+          date: day.date,
+          title: day.title,
+        })
+        .select()
+        .single();
+
+      if (dayError) throw dayError;
+
+      if (day.items.length > 0) {
+        const itemsToInsert = day.items.map((item, idx) => ({
+          day_id: dayData.id,
+          title: item.title,
+          start_time: item.start_time || null,
+          duration_minutes: item.duration_minutes || null,
+          notes: item.notes || null,
+          position: idx,
+        }));
+
+        const { error: itemsError } = await supabase
+          .from("itinerary_items")
+          .insert(itemsToInsert);
+
+        if (itemsError) throw itemsError;
+      }
+    }
+
+    return itData;
   },
 
-  // ==========================================================
-  // 4. ACTUALIZAR ITINERARIO
-  // ==========================================================
-  async updateItinerary(
+  // UPDATE
+  async updateFullItinerary(
     itineraryId: string,
-    updates: Partial<Omit<Itinerary, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
-  ): Promise<Itinerary> {
-    const { data, error } = await supabase
-      .from('itineraries')
-      .update(updates)
-      .eq('id', itineraryId)
-      .select()
-      .single();
+    data: {
+      title: string;
+      description: string;
+      start_date: string;
+      end_date: string;
+      days: { date: string; title: string; items: { title: string; start_time: string; duration_minutes: number; notes: string }[] }[];
+    }
+  ) {
+    const supabase = createClient();
 
-    if (error) throw error;
-    return { ...data, days: [] };
-  },
-
-  // ==========================================================
-  // 5. ELIMINAR ITINERARIO
-  // ==========================================================
-  async deleteItinerary(itineraryId: string): Promise<void> {
-    const { error } = await supabase
-      .from('itineraries')
-      .delete()
-      .eq('id', itineraryId);
-
-    if (error) throw error;
-  },
-
-  // ==========================================================
-  // 6. AGREGAR DÍA A ITINERARIO
-  // ==========================================================
-  async addDay(
-    itineraryId: string,
-    date: string,
-    title?: string
-  ): Promise<ItineraryDay> {
-    const { data, error } = await supabase
-      .from('itinerary_days')
-      .insert({
-        itinerary_id: itineraryId,
-        date,
-        title
+    // 1. Actualizar cabecera
+    const { error: itError } = await supabase
+      .from("itineraries")
+      .update({
+        title: data.title,
+        description: data.description,
+        start_date: data.start_date,
+        end_date: data.end_date,
       })
-      .select()
-      .single();
+      .eq("id", itineraryId);
 
-    if (error) throw error;
-    return { ...data, items: [] };
+    if (itError) throw itError;
+
+    // 2. Re-sincronizar días (los ON DELETE CASCADE eliminan los items automáticamente)
+    await supabase.from("itinerary_days").delete().eq("itinerary_id", itineraryId);
+
+    for (const day of data.days) {
+      const { data: dayData, error: dayError } = await supabase
+        .from("itinerary_days")
+        .insert({
+          itinerary_id: itineraryId,
+          date: day.date,
+          title: day.title,
+        })
+        .select()
+        .single();
+
+      if (dayError) throw dayError;
+
+      if (day.items.length > 0) {
+        const itemsToInsert = day.items.map((item, idx) => ({
+          day_id: dayData.id,
+          title: item.title,
+          start_time: item.start_time || null,
+          duration_minutes: item.duration_minutes || null,
+          notes: item.notes || null,
+          position: idx,
+        }));
+
+        const { error: itemsError } = await supabase
+          .from("itinerary_items")
+          .insert(itemsToInsert);
+
+        if (itemsError) throw itemsError;
+      }
+    }
   },
 
-  // ==========================================================
-  // 7. ELIMINAR DÍA
-  // ==========================================================
-  async deleteDay(dayId: string): Promise<void> {
+  // DELETE
+  async deleteItinerary(itineraryId: string) {
+    const supabase = createClient();
     const { error } = await supabase
-      .from('itinerary_days')
+      .from("itineraries")
       .delete()
-      .eq('id', dayId);
+      .eq("id", itineraryId);
 
     if (error) throw error;
   },
 
-  // ==========================================================
-  // 8. ACTUALIZAR DÍA
-  // ==========================================================
-  async updateDay(
-    dayId: string,
-    updates: Partial<Omit<ItineraryDay, 'id' | 'itinerary_id'>>
-  ): Promise<ItineraryDay> {
-    const { data, error } = await supabase
-      .from('itinerary_days')
-      .update(updates)
-      .eq('id', dayId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return { ...data, items: [] };
+  // FAVORITES
+  async toggleFavorite(userId: string, itineraryId: string, isFav: boolean) {
+    const supabase = createClient();
+    if (isFav) {
+      return await supabase
+        .from("itinerary_favorites")
+        .delete()
+        .eq("user_id", userId)
+        .eq("itinerary_id", itineraryId);
+    } else {
+      return await supabase
+        .from("itinerary_favorites")
+        .insert({ user_id: userId, itinerary_id: itineraryId });
+    }
   },
-
-  // ==========================================================
-  // 9. AGREGAR ACTIVIDAD (ITEM)
-  // ==========================================================
-  async addItem(
-    dayId: string,
-    item: Omit<ItineraryItem, 'id' | 'day_id' | 'position'>
-  ): Promise<ItineraryItem> {
-    // Obtener la posición actual máxima para este día
-    const { data: existing, error: countError } = await supabase
-      .from('itinerary_items')
-      .select('position')
-      .eq('day_id', dayId)
-      .order('position', { ascending: false })
-      .limit(1);
-
-    if (countError) throw countError;
-
-    const nextPosition = (existing && existing.length > 0)
-      ? existing[0].position + 1
-      : 0;
-
-    const { data, error } = await supabase
-      .from('itinerary_items')
-      .insert({
-        ...item,
-        day_id: dayId,
-        position: nextPosition
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  },
-
-  // ==========================================================
-  // 10. ELIMINAR ACTIVIDAD
-  // ==========================================================
-  async deleteItem(itemId: string): Promise<void> {
-    const { error } = await supabase
-      .from('itinerary_items')
-      .delete()
-      .eq('id', itemId);
-
-    if (error) throw error;
-  },
-
-  // ==========================================================
-  // 11. ACTUALIZAR ACTIVIDAD
-  // ==========================================================
-  async updateItem(
-    itemId: string,
-    updates: Partial<Omit<ItineraryItem, 'id' | 'day_id' | 'position'>>
-  ): Promise<ItineraryItem> {
-    const { data, error } = await supabase
-      .from('itinerary_items')
-      .update(updates)
-      .eq('id', itemId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  },
-
-  // ==========================================================
-  // 12. REORDENAR ACTIVIDADES
-  // ==========================================================
-  async reorderItems(dayId: string, itemIds: string[]): Promise<void> {
-    // Actualiza la posición de cada item según el orden dado
-    const updates = itemIds.map((id, index) => ({
-      id,
-      position: index
-    }));
-
-    const { error } = await supabase
-      .from('itinerary_items')
-      .upsert(updates, { onConflict: 'id' });
-
-    if (error) throw error;
-  },
-
-  // ==========================================================
-  // 13. OBTENER ACTIVIDAD POR ID
-  // ==========================================================
-  async getItem(itemId: string): Promise<ItineraryItem | null> {
-    const { data, error } = await supabase
-      .from('itinerary_items')
-      .select('*')
-      .eq('id', itemId)
-      .single();
-
-    if (error) throw error;
-    return data;
-  }
 };

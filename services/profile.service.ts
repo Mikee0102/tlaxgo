@@ -1,63 +1,71 @@
 import { createClient } from "@/lib/supabase/client";
+import { UserProfile } from "@/types/user";
 
-export async function getMyProfile() {
-  const supabase = createClient();
+export const profileService = {
+  // Actualizar perfil de usuario
+  async updateProfile(
+    userId: string,
+    updates: { name?: string; bio?: string; location?: string; avatar_url?: string }
+  ) {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId)
+      .select()
+      .single();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    if (error) throw error;
+    return data as UserProfile;
+  },
 
-  if (userError || !user) {
+  // Métricas agregadas para el Dashboard de Administrador
+  async getAdminStats() {
+    const supabase = createClient();
+
+    const [usersRes, placesRes, itinerariesRes, eventsRes, reviewsRes] = await Promise.all([
+      supabase.from("profiles").select("id", { count: "exact", head: true }),
+      supabase.from("places").select("id", { count: "exact", head: true }),
+      supabase.from("itineraries").select("id", { count: "exact", head: true }),
+      supabase.from("events").select("id", { count: "exact", head: true }),
+      supabase.from("reviews").select("id, rating, created_at, profiles(name), places(name)"),
+    ]);
+
     return {
-      profile: null,
-      error: userError,
+      totalUsers: usersRes.count || 0,
+      totalPlaces: placesRes.count || 0,
+      totalItineraries: itinerariesRes.count || 0,
+      totalEvents: eventsRes.count || 0,
+      recentReviews: reviewsRes.data || [],
     };
-  }
+  },
 
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  // Resumen personalizado para el Dashboard de Turista
+  async getUserDashboardData(userId: string) {
+    const supabase = createClient();
 
-  return {
-    profile,
-    error,
-  };
-}
+    const [favsRes, itFavsRes, reviewsRes] = await Promise.all([
+      supabase
+        .from("favorites")
+        .select("saved_at, places(*)")
+        .eq("user_id", userId),
+      supabase
+        .from("itinerary_favorites")
+        .select("saved_at, itineraries(*, itinerary_days(*))")
+        .eq("user_id", userId),
+      supabase
+        .from("reviews")
+        .select("id, rating, comment, places(name)")
+        .eq("user_id", userId),
+    ]);
 
-export async function updateMyProfile(data: {
-  full_name?: string;
-  username?: string;
-  bio?: string;
-  avatar_url?: string;
-}) {
-  const supabase = createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
     return {
-      profile: null,
-      error: new Error("Usuario no autenticado"),
+      favoritePlaces: favsRes.data?.map((f: any) => f.places) || [],
+      favoriteItineraries: itFavsRes.data?.map((f: any) => f.itineraries) || [],
+      userReviews: reviewsRes.data || [],
     };
-  }
-
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .update({
-      ...data,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id)
-    .select()
-    .single();
-
-  return {
-    profile,
-    error,
-  };
-}
+  },
+};
