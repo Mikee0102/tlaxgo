@@ -1,110 +1,60 @@
-"use client";
+'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/client";
-import { getUserProfile, signInWithGoogle, signOut } from "@/services/auth.service";
-import { UserProfile } from "@/types/user";
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
+import { profileService } from '@/services/profile.service';
+import { UserProfile } from '@/types/user';
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   profile: UserProfile | null;
   isAdmin: boolean;
   loading: boolean;
-  loginWithGoogle: () => Promise<any>;
-  logout: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  profile: null,
+  isAdmin: false,
+  loading: true,
+});
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const supabase = createClient();
-
-  const fetchProfile = async (userId: string) => {
-    const data = await getUserProfile(userId);
-    setProfile(data);
-  };
-
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
 
-        if (currentSession?.user) {
-          await fetchProfile(currentSession.user.id);
-        }
-      } catch (err) {
-        console.error("Error al inicializar sesión:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-
-        if (newSession?.user) {
-          await fetchProfile(newSession.user.id);
-        } else {
+      if (currentUser) {
+        try {
+          // Obtener datos del perfil guardados en Firestore
+          const userProfile = await profileService.getProfile(currentUser.uid);
+          setProfile(userProfile);
+        } catch (error) {
+          console.error('Error al obtener perfil del usuario:', error);
           setProfile(null);
         }
-        setLoading(false);
+      } else {
+        setProfile(null);
       }
-    );
 
-    return () => {
-      subscription.unsubscribe();
-    };
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
-    await signOut();
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-  };
-
-  const refreshProfile = async () => {
-    if (user?.id) {
-      await fetchProfile(user.id);
-    }
-  };
+  const isAdmin = profile?.role === 'admin';
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        profile,
-        isAdmin: profile?.role === "admin",
-        loading,
-        loginWithGoogle: signInWithGoogle,
-        logout: handleLogout,
-        refreshProfile,
-      }}
-    >
+    <AuthContext.Provider value={{ user, profile, isAdmin, loading }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuthContext() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuthContext debe ser usado dentro de un AuthProvider");
-  }
-  return context;
-}
+export const useAuth = () => useContext(AuthContext);
