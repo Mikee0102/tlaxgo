@@ -19,7 +19,8 @@ export default function ItinerariesPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const data = await itineraryService.getItineraries(user?.id);
+      if (!user?.uid) return;
+      const data = await itineraryService.getUserItineraries(user.uid);
       setItineraries(data);
     } catch (err) {
       console.error(err);
@@ -33,12 +34,12 @@ export default function ItinerariesPage() {
   }, [user]);
 
   const handleToggleFavorite = async (id: string, currentStatus: boolean) => {
-    if (!user) return;
+    if (!user?.uid) return;
     try {
       setItineraries((prev) =>
         prev.map((it) => (it.id === id ? { ...it, is_favorite: !currentStatus } : it))
       );
-      await itineraryService.toggleFavorite(user.id, id, currentStatus);
+      await itineraryService.toggleFavorite(user.uid, id, currentStatus);
     } catch (err) {
       console.error(err);
       loadData();

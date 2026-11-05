@@ -12,8 +12,11 @@ export default function LoginPage() {
     try {
       setIsSubmitting(true);
       await loginWithGoogle();
-    } catch (error) {
-      console.error('Error en Google Login:', error);
+    } catch (error: any) {
+      if (error.code !== 'auth/popup-closed-by-user') {
+        console.error('Error en Google Login:', error);
+      }
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -39,7 +42,7 @@ export default function LoginPage() {
           type="button"
           onClick={handleGoogleLogin}
           disabled={isSubmitting}
-          className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-900 font-semibold py-3.5 px-6 rounded-2xl transition shadow-lg active:scale-[0.98] disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-900 font-semibold py-3.5 px-6 rounded-2xl transition shadow-lg active:scale-[0.98] disabled:opacity-50 cursor-pointer"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path

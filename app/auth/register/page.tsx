@@ -2,19 +2,91 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/useAuth';
-import { Compass, CheckCircle2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { authService } from '@/services/auth.service';
+import { profileService } from '@/services/profile.service';
+import { Compass, CheckCircle2, User, Mail, Lock, AlertCircle } from 'lucide-react';
 
 export default function RegisterPage() {
-  const { loginWithGoogle } = useAuth();
+  const router = useRouter();
+
+  // Estados para el formulario
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Estados de interfaz
+  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleRegister = async () => {
+  // Registro con Email y Contraseña
+  const handleEmailRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // 1. Crear usuario en Firebase Auth
+      const userCredential = await authService.register(email, password, name);
+      const user = userCredential.user;
+
+      // 2. Guardar perfil básico en Firestore
+      await profileService.updateProfile(user.uid, {
+        name,
+        email: user.email,
+        createdAt: new Date().toISOString(),
+      });
+
+      // 3. Redirigir al dashboard
+      router.push('/dashboard');
+    } catch (err: any) {
+      if (err.code === 'auth/email-already-in-use') {
+        setError('El correo electrónico ya está registrado.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('El formato de correo electrónico no es válido.');
+      } else {
+        setError('Ocurrió un error al registrar tu cuenta. Inténtalo de nuevo.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Registro / Login con Google
+  const handleGoogleRegister = async () => {
+    setError(null);
     try {
       setIsSubmitting(true);
-      await loginWithGoogle();
-    } catch (error) {
-      console.error(error);
+      const userCredential = await authService.loginWithGoogle();
+      const user = userCredential.user;
+
+      // Guardar o actualizar perfil en Firestore al entrar con Google
+      await profileService.updateProfile(user.uid, {
+        name: user.displayName || name || 'Usuario',
+        email: user.email,
+        photoURL: user.photoURL || null,
+        createdAt: new Date().toISOString(),
+      });
+
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error('Error con Google:', error);
+      if (error.code !== 'auth/popup-closed-by-user') {
+        setError('Error al iniciar sesión con Google.');
+      }
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -43,18 +115,99 @@ export default function RegisterPage() {
             <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
             <span>Crea itinerarios inteligentes con mapas interactivos</span>
           </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
-            <span>Sincronización automática con tu cuenta de Google</span>
+        </div>
+
+        {/* Mensaje de Error */}
+        {error && (
+          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2 text-left">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
           </div>
+        )}
+
+        {/* Formulario de Registro Manual */}
+        <form onSubmit={handleEmailRegister} className="space-y-4 text-left mb-6">
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1">Nombre Completo</label>
+            <div className="relative">
+              <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Juan Pérez"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1">Correo Electrónico</label>
+            <div className="relative">
+              <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tu@correo.com"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1">Contraseña</label>
+            <div className="relative">
+              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1">Confirmar Contraseña</label>
+            <div className="relative">
+              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold py-3 px-6 rounded-xl transition duration-200 shadow-lg active:scale-[0.98] disabled:opacity-50 text-sm"
+          >
+            {isSubmitting ? 'Creando perfil...' : 'Crear cuenta'}
+          </button>
+        </form>
+
+        {/* Divisor */}
+        <div className="relative flex items-center justify-center mb-6">
+          <div className="border-t border-slate-800 w-full" />
+          <span className="bg-slate-900 px-3 text-xs text-slate-500 absolute">o continúa con</span>
         </div>
 
         {/* Botón Google */}
         <button
           type="button"
-          onClick={handleRegister}
+          onClick={handleGoogleRegister}
           disabled={isSubmitting}
-          className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-900 font-semibold py-3.5 px-6 rounded-2xl transition duration-200 shadow-lg active:scale-[0.98] disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-900 font-semibold py-3 px-6 rounded-xl transition duration-200 shadow-lg active:scale-[0.98] disabled:opacity-50 text-sm"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
@@ -74,12 +227,12 @@ export default function RegisterPage() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
             />
           </svg>
-          {isSubmitting ? 'Creando perfil...' : 'Registrarme con Google'}
+          Google
         </button>
 
         <p className="mt-6 text-xs text-slate-400">
           ¿Ya tienes cuenta?{' '}
-          <Link href="/login" className="text-sky-400 hover:underline font-semibold">
+          <Link href="/auth/login" className="text-sky-400 hover:underline font-semibold">
             Inicia sesión aquí
           </Link>
         </p>

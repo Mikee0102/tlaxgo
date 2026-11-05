@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/providers/auth-provider';
 import { profileService } from '@/services/profile.service';
 import StatsCard from '@/components/dashborad/statscard';
 import ChartWidget from '@/components/dashborad/chartwidget';
@@ -28,14 +28,17 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!user) return;
+      // ⚠️ En Firebase Auth el identificador único es user.uid, no user.id
+      const userId = user?.uid;
+      if (!userId) return;
+
       try {
         setLoadingData(true);
         if (isAdmin) {
           const stats = await profileService.getAdminStats();
           setAdminStats(stats);
         } else {
-          const data = await profileService.getUserDashboardData(user.id);
+          const data = await profileService.getUserDashboardData(userId);
           setUserData(data);
         }
       } catch (err) {
@@ -47,6 +50,8 @@ export default function DashboardPage() {
 
     if (!authLoading && user) {
       fetchData();
+    } else if (!authLoading && !user) {
+      setLoadingData(false);
     }
   }, [user, isAdmin, authLoading]);
 
@@ -67,7 +72,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-slate-950 text-slate-100 pb-12">
         <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
           
-          <header className="flex flex-col gap-4 rounded-[2rem] border border-slate-800 bg-slate-900/70 p-6 shadow-2xl backdrop-blur-xl md:flex-row md:items-center md:justify-between">
+          <header className="flex flex-col gap-4 rounded-4xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl backdrop-blur-xl md:flex-row md:items-center md:justify-between">
             <div>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30 mb-2">
                 <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
@@ -115,7 +120,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-slate-950 text-slate-100 pb-12">
       <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
         
-        <header className="flex flex-col gap-4 rounded-[2rem] border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-sky-950/20 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
+        <header className="flex flex-col gap-4 rounded-4xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-sky-950/20 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-300 border border-sky-500/30">

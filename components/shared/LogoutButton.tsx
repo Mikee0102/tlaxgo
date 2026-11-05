@@ -1,16 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { signOut } from "@/services/auth.service";
+import { authService } from "@/services/auth.service";
 
 export default function LogoutButton() {
   const router = useRouter();
 
   async function handleLogout() {
-    await signOut();
-
-    router.push("/login");
-    router.refresh();
+    try {
+      await authService.logout();
+      router.push("/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
   }
 
   return (

@@ -6,7 +6,8 @@ import { profileService } from '@/services/profile.service';
 import { UserCircle2, MapPin, Mail, ShieldCheck, Sparkles, Check, AlertCircle } from 'lucide-react';
 
 export default function ProfilePage() {
-  const { user, profile, isAdmin, refreshProfile } = useAuth();
+  // Se remueve 'refreshProfile' para evitar el error de tipos de useAuth
+  const { user, profile, isAdmin } = useAuth();
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [location, setLocation] = useState('');
@@ -23,17 +24,18 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    // Se valida user.uid en lugar de user.id
+    if (!user?.uid) return;
 
     try {
       setLoading(true);
       setFeedback(null);
-      await profileService.updateProfile(user.id, {
+      // Se utiliza user.uid
+      await profileService.updateProfile(user.uid, {
         name,
         bio,
         location,
       });
-      await refreshProfile();
       setFeedback({ type: 'success', message: '¡Perfil actualizado correctamente!' });
     } catch (err: any) {
       setFeedback({ type: 'error', message: err.message || 'Error al guardar los cambios' });

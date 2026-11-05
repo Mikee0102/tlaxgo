@@ -1,3 +1,5 @@
+// types/place.ts
+
 export type PlaceCategory = 'museum' | 'church' | 'park' | 'viewpoint' | 'restaurant' | 'hotel' | 'other';
 
 export interface Place {
@@ -6,11 +8,11 @@ export interface Place {
   lat: number;
   lon: number;
   category: PlaceCategory;
-  description?: string;
   address?: string;
   phone?: string;
   website?: string;
   rating?: number;
-  imageUrl?: string;
-  isFavorite?: boolean;
+  description?: string;
+  image?: string;
+  wikipedia?: string; // 👈 Agrega esta propiedad opcional
 }

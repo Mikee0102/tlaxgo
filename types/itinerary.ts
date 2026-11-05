@@ -1,31 +1,34 @@
-export interface ItineraryItem {
+// types/itinerary.ts
+
+export interface Activity {
   id?: string;
-  day_id?: string;
-  place_id?: string | null;
   title: string;
+  description?: string;
+  time?: string;
   start_time?: string;
   duration_minutes?: number;
+  location?: string;
   notes?: string;
-  position: number;
 }
 
-export interface ItineraryDay {
-  id?: string;
-  itinerary_id?: string;
-  date: string;
+export interface DayItinerary {
+  day_number?: number;
+  date?: string;
   title?: string;
-  itinerary_items: ItineraryItem[];
+  activities?: Activity[];
+  items?: Activity[];
 }
 
 export interface Itinerary {
-  id: string;
-  user_id: string;
+  id?: string;
+  userId?: string;
   title: string;
-  description?: string;
+  description: string;
   start_date: string;
   end_date: string;
-  status: 'planned' | 'active' | 'completed' | 'cancelled';
-  created_at: string;
-  itinerary_days?: ItineraryDay[];
   is_favorite?: boolean;
+  days?: DayItinerary[]; // 👈 Agrega esta propiedad opcional
+  itinerary_days?: DayItinerary[]; // Opcional por compatibilidad
+  createdAt?: string;
+  updatedAt?: string;
 }
