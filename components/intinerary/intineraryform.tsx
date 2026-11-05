@@ -26,14 +26,14 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (initialData?.itinerary_days && initialData.itinerary_days.length > 0) {
+    if (initialData?.days && initialData.days.length > 0) {
       setDays(
-        initialData.itinerary_days.map((d) => ({
-          date: d.date,
-          title: d.title || `Día`,
-          items: (d.itinerary_items || []).map((i) => ({
-            title: i.title,
-            start_time: i.start_time ? i.start_time.slice(0, 5) : '09:00',
+        initialData.days.map((d: any, idx: number) => ({
+          date: d.date || startDate,
+          title: d.title || `Día ${idx + 1} - Explorando Tlaxcala`,
+          items: (d.activities || d.items || []).map((i: any) => ({
+            title: i.title || '',
+            start_time: i.start_time || i.time || '09:00',
             duration_minutes: i.duration_minutes || 60,
             notes: i.notes || '',
           })),
@@ -143,7 +143,7 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user?.uid) return;
     if (days.length === 0) {
       alert('Agrega al menos un día al itinerario.');
       return;
@@ -151,22 +151,27 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
 
     try {
       setLoading(true);
+      const itineraryPayload = {
+        title,
+        description,
+        start_date: startDate,
+        end_date: endDate || startDate,
+        days: days.map((d, idx) => ({
+          day_number: idx + 1,
+          title: d.title,
+          activities: d.items.map((item) => ({
+            title: item.title,
+            time: item.start_time,
+            duration_minutes: item.duration_minutes,
+            notes: item.notes,
+          })),
+        })),
+      };
+
       if (initialData?.id) {
-        await itineraryService.updateFullItinerary(initialData.id, {
-          title,
-          description,
-          start_date: startDate,
-          end_date: endDate || startDate,
-          days,
-        });
+        await itineraryService.updateFullItinerary(initialData.id, itineraryPayload);
       } else {
-        await itineraryService.createFullItinerary(user.id, {
-          title,
-          description,
-          start_date: startDate,
-          end_date: endDate || startDate,
-          days,
-        });
+        await itineraryService.createFullItinerary(user.uid, itineraryPayload);
       }
       onSuccess();
     } catch (err: any) {

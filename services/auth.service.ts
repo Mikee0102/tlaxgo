@@ -5,8 +5,28 @@ import {
   signOut,
   updateProfile,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  updatePassword as firebaseUpdatePassword
 } from 'firebase/auth';
+
+// Función nombrada para la actualización de contraseña
+export async function updatePassword(newPassword: string): Promise<{ error: any }> {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      return { error: { message: 'No hay una sesión activa de usuario.' } };
+    }
+    await firebaseUpdatePassword(user, newPassword);
+    return { error: null };
+  } catch (err: any) {
+    if (err.code === 'auth/requires-recent-login') {
+      return { 
+        error: { message: 'Por seguridad, debes cerrar sesión y volver a ingresar para cambiar tu contraseña.' } 
+      };
+    }
+    return { error: { message: err.message || 'Error al actualizar la contraseña.' } };
+  }
+}
 
 export const authService = {
   // Iniciar sesión con Email y Contraseña
@@ -28,6 +48,9 @@ export const authService = {
     const provider = new GoogleAuthProvider();
     return await signInWithPopup(auth, provider);
   },
+
+  // Actualizar contraseña
+  updatePassword,
 
   // Cerrar sesión
   async logout() {
