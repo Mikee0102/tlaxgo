@@ -15,17 +15,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Tipos de capas disponibles
-type TileProvider = 'dark' | 'standard' | 'satellite';
+// Tipos de capas disponibles (Libres de API Keys)
+type TileProvider = 'standard' | 'satellite';
 
 const TILE_LAYERS: Record<TileProvider, { url: string; attribution: string }> = {
-  dark: {
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-  },
   standard: {
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   },
   satellite: {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -54,7 +50,9 @@ export default function Map({ places, selectedPlace, onSelectPlace }: MapProps) 
   const defaultCenter: [number, number] = [19.3182, -98.2396]; // Zócalo de Tlaxcala
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-  const [currentLayer, setCurrentLayer] = useState<TileProvider>('dark');
+  
+  // Capa inicial por defecto (Estándar)
+  const [currentLayer, setCurrentLayer] = useState<TileProvider>('standard');
   const [showLayerMenu, setShowLayerMenu] = useState(false);
 
   // Mover el centro cuando cambia el selectedPlace
@@ -102,7 +100,7 @@ export default function Map({ places, selectedPlace, onSelectPlace }: MapProps) 
             position={userLocation}
             icon={L.divIcon({
               className: 'custom-user-marker',
-              html: `<div class="w-4 h-4 bg-sky-400 rounded-full border-2 border-white shadow-lg animate-ping"></div>`,
+              html: `<div class="w-4 h-4 bg-sky-500 rounded-full border-2 border-white shadow-lg animate-ping"></div>`,
             })}
           >
             <Popup>¡Estás aquí!</Popup>
@@ -134,29 +132,23 @@ export default function Map({ places, selectedPlace, onSelectPlace }: MapProps) 
         <div className="relative">
           <button
             onClick={() => setShowLayerMenu(!showLayerMenu)}
-            className="p-3 rounded-full bg-slate-950/90 backdrop-blur-md border border-slate-800 text-slate-300 hover:text-white shadow-2xl transition"
+            className="p-3 rounded-full bg-white/90 hover:bg-white text-slate-700 hover:text-slate-950 border border-slate-200 shadow-xl backdrop-blur-md transition cursor-pointer"
             title="Cambiar capa de mapa"
           >
             <Layers className="w-5 h-5" />
           </button>
 
           {showLayerMenu && (
-            <div className="absolute right-12 bottom-0 bg-slate-950/95 backdrop-blur-md border border-slate-800 rounded-2xl p-2 shadow-2xl flex flex-col gap-1 w-32">
-              <button
-                onClick={() => { setCurrentLayer('dark'); setShowLayerMenu(false); }}
-                className={`text-xs px-3 py-1.5 rounded-xl text-left transition ${currentLayer === 'dark' ? 'bg-sky-500 text-white' : 'text-slate-300 hover:bg-slate-900'}`}
-              >
-                🌙 Oscuro
-              </button>
+            <div className="absolute right-12 bottom-0 bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl p-2 shadow-2xl flex flex-col gap-1 w-36 z-[99999]">
               <button
                 onClick={() => { setCurrentLayer('standard'); setShowLayerMenu(false); }}
-                className={`text-xs px-3 py-1.5 rounded-xl text-left transition ${currentLayer === 'standard' ? 'bg-sky-500 text-white' : 'text-slate-300 hover:bg-slate-900'}`}
+                className={`text-xs px-3 py-2 rounded-xl text-left font-medium transition cursor-pointer ${currentLayer === 'standard' ? 'bg-sky-500 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
               >
                 🗺️ Estándar
               </button>
               <button
                 onClick={() => { setCurrentLayer('satellite'); setShowLayerMenu(false); }}
-                className={`text-xs px-3 py-1.5 rounded-xl text-left transition ${currentLayer === 'satellite' ? 'bg-sky-500 text-white' : 'text-slate-300 hover:bg-slate-900'}`}
+                className={`text-xs px-3 py-2 rounded-xl text-left font-medium transition cursor-pointer ${currentLayer === 'satellite' ? 'bg-sky-500 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
               >
                 🛰️ Satelital
               </button>
@@ -167,7 +159,7 @@ export default function Map({ places, selectedPlace, onSelectPlace }: MapProps) 
         {/* Botón Geolocalización */}
         <button
           onClick={handleGetLocation}
-          className="p-3 rounded-full bg-sky-500 hover:bg-sky-400 text-white shadow-lg shadow-sky-500/20 transition"
+          className="p-3 rounded-full bg-sky-500 hover:bg-sky-400 text-white shadow-lg shadow-sky-500/20 transition cursor-pointer"
           title="Mi Ubicación Actual"
         >
           <Navigation className="w-5 h-5" />

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 
 import { AuthProvider } from "@/providers/auth-provider";
@@ -13,13 +13,19 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Smart Guide",
   description: "Guía turística inteligente",
-  manifest: "/manifest.json", // <-- ¡Aquí enlazamos el manifest!
-  themeColor: "#ffffff",     // <-- Color de la barra superior en dispositivos móviles
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Smart Guide",
   },
+};
+
+// <-- Aquí va el viewport correcto en la raíz
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -37,4 +43,5 @@ export default function RootLayout({
       </body>
     </html>
   );
+  
 }
