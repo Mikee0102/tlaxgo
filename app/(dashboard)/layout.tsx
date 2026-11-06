@@ -1,19 +1,20 @@
-import Navbar from '@/components/layout/Navbar';
-import React from 'react';
-// 👈 Asegúrate de que esta ruta coincida con la ubicación real de tu componente Navbar
+'use client';
+
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-<<<<<<< HEAD
   const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/auth/login");
+      router.replace('/auth/login');
     }
   }, [user, loading, router]);
 
@@ -27,21 +28,12 @@ export default function DashboardLayout({
       </div>
     );
   }
- 
 
   if (!user) return null;
 
-=======
->>>>>>> origin/develop
   return (
-    <div className="min-h-screen bg-slate-950 text-white antialiased flex flex-col">
-      {/* Barra de navegación persistente en todo el dashboard */}
-      <Navbar />
-
-      {/* Contenido principal de las subrutas (itinerario, exploración, etc.) */}
-      <main className="flex-1 w-full">
-        {children}
-      </main>
+    <div className="min-h-screen bg-slate-950 text-white antialiased">
+      {children}
     </div>
   );
 }
