@@ -1,73 +1,41 @@
 'use client';
 
-import { createClient } from '@/lib/supabase/client';
-import { useState, useEffect } from 'react';
-
-const supabase = createClient();
+import { useAuth as useAuthContext } from '@/providers/auth-provider';
+import { auth } from '@/lib/firebase/config';
+import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { profileService } from '@/services/profile.service';
+import { useRouter } from 'next/navigation';
 
 export function useAuth() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const context = useAuthContext();
+  const router = useRouter();
 
-  useEffect(() => {
-    async function loadUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
-    }
-
-    loadUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // ============================================
-  // LOGIN CON GOOGLE (lo que usa el login de tu amigo)
-  // ============================================
   const loginWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    // Sincroniza o crea el perfil en Firestore sin errores de tipo
+    await profileService.updateProfile(user.uid, {
+      email: user.email || '',
+      name: user.displayName || undefined,
+      photoURL: user.photoURL || undefined,
+      avatar_url: user.photoURL || undefined,
+      lastLogin: new Date().toISOString(),
     });
-    
-    if (error) {
-      console.error('Error al iniciar con Google:', error);
-      throw error;
-    }
+
+    router.push('/dashboard');
+    return user;
   };
 
-  // ============================================
-  // CERRAR SESIÓN
-  // ============================================
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error al cerrar sesión:', error);
-      throw error;
-    }
-    setUser(null);
+  const logout = async () => {
+    await signOut(auth);
+    router.push('/auth/login');
   };
-
-  // ============================================
-  // VERIFICAR SI ES ADMIN
-  // ============================================
-  const isAdmin = user?.email === 'xciclos@gmail.com';
 
   return {
-    user,
-    loading,
-    isAdmin,
-    loginWithGoogle,  // ← AHORA SÍ EXISTE
-    signOut,
-    isAuthenticated: !!user
+    ...context,
+    loginWithGoogle,
+    logout,
   };
 }

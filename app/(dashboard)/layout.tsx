@@ -1,15 +1,25 @@
-"use client";
+import type { Metadata, Viewport } from 'next';
+import '@/app/globals.css';
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import Navbar from "@/components/layout/Navbar";
+export const metadata: Metadata = {
+  title: 'Tlax.go | Rutas e Itinerarios Turísticos de Tlaxcala',
+  description: 'Descubre haciendas, ecoturismo, gastronomía y eventos culturales en Tlaxcala.',
+};
 
-export default function DashboardLayout({
+// Configuración recomendada para Next.js 14 / 15 / 16
+export const viewport: Viewport = {
+  themeColor: '#020617', // slate-950
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+<<<<<<< HEAD
   const { user, loading } = useAuth();
   const router = useRouter();
 
@@ -33,10 +43,13 @@ export default function DashboardLayout({
 
   if (!user) return null;
 
+=======
+>>>>>>> origin/develop
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
-      <Navbar />
-      <main className="flex-1">{children}</main>
-    </div>
+    <html lang="es">
+      <body className="bg-slate-950 text-white antialiased">
+        {children}
+      </body>
+    </html>
   );
 }

@@ -21,6 +21,9 @@ export default function ItineraryCard({
 }: Props) {
   const [expanded, setExpanded] = useState(false);
 
+  const daysCount = itinerary.days?.length || itinerary.itinerary_days?.length || 0;
+  const daysList = itinerary.days || itinerary.itinerary_days || [];
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 hover:border-slate-700 transition duration-200 text-white flex flex-col justify-between">
       <div>
@@ -38,7 +41,11 @@ export default function ItineraryCard({
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
                 <button
-                  onClick={() => onDelete?.(itinerary.id)}
+                  onClick={() => {
+                    if (itinerary.id) {
+                      onDelete?.(itinerary.id);
+                    }
+                  }}
                   className="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-red-400 transition"
                   title="Eliminar"
                 >
@@ -48,7 +55,11 @@ export default function ItineraryCard({
             )}
             
             <button
-              onClick={() => onToggleFavorite(itinerary.id, !!itinerary.is_favorite)}
+              onClick={() => {
+                if (itinerary.id) {
+                  onToggleFavorite(itinerary.id, !!itinerary.is_favorite);
+                }
+              }}
               className={`p-2 rounded-full border transition ${
                 itinerary.is_favorite
                   ? 'bg-rose-500/10 border-rose-500/30 text-rose-500'
@@ -74,31 +85,36 @@ export default function ItineraryCard({
           </span>
           <span className="inline-flex items-center gap-1.5 bg-slate-950 px-3 py-1 rounded-full border border-slate-800">
             <MapPin className="w-3.5 h-3.5 text-amber-400" />
-            {itinerary.itinerary_days?.length || 0} Días de Ruta
+            {daysCount} Días de Ruta
           </span>
         </div>
 
-        {expanded && itinerary.itinerary_days && (
+        {expanded && daysList.length > 0 && (
           <div className="mt-4 pt-4 border-t border-slate-800/80 space-y-3">
-            {itinerary.itinerary_days.map((day) => (
-              <div key={day.id || day.date} className="bg-slate-950/60 p-3 rounded-2xl border border-slate-800/60">
-                <div className="flex justify-between items-center text-xs font-bold text-sky-300 mb-2">
-                  <span>{day.title}</span>
-                  <span className="text-[11px] text-slate-500 font-normal">{day.date}</span>
-                </div>
-                <div className="space-y-1.5">
-                  {day.itinerary_items?.map((item) => (
-                    <div key={item.id || item.position} className="flex items-center justify-between text-xs text-slate-300 py-1 border-b border-slate-900 last:border-0">
-                      <span className="font-medium">{item.title}</span>
-                      <div className="flex items-center gap-2 text-slate-500 text-[11px]">
-                        {item.start_time && <span>{item.start_time.slice(0, 5)} hrs</span>}
-                        {item.duration_minutes && <span>({item.duration_minutes} min)</span>}
+            {daysList.map((day: any, idx: number) => {
+              const activities = day.activities || day.items || day.itinerary_items || [];
+              return (
+                <div key={day.id || day.date || idx} className="bg-slate-950/60 p-3 rounded-2xl border border-slate-800/60">
+                  <div className="flex justify-between items-center text-xs font-bold text-sky-300 mb-2">
+                    <span>{day.title || `Día ${idx + 1}`}</span>
+                    {day.date && <span className="text-[11px] text-slate-500 font-normal">{day.date}</span>}
+                  </div>
+                  <div className="space-y-1.5">
+                    {activities.map((item: any, iIdx: number) => (
+                      <div key={item.id || item.position || iIdx} className="flex items-center justify-between text-xs text-slate-300 py-1 border-b border-slate-900 last:border-0">
+                        <span className="font-medium">{item.title}</span>
+                        <div className="flex items-center gap-2 text-slate-500 text-[11px]">
+                          {(item.start_time || item.time) && (
+                            <span>{(item.start_time || item.time).slice(0, 5)} hrs</span>
+                          )}
+                          {item.duration_minutes && <span>({item.duration_minutes} min)</span>}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

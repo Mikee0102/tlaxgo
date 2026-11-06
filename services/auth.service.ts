@@ -1,104 +1,59 @@
-import { createClient } from '@/lib/supabase/client';
+import { auth } from '@/lib/firebase/config';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut,
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
+  updatePassword as firebaseUpdatePassword
+} from 'firebase/auth';
 
-const supabase = createClient();
-
-// ============================================
-// FUNCIONES EXISTENTES
-// ============================================
-
-export async function signIn(email: string, password: string) {
-  return supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-}
-
-export async function signUp(
-  email: string,
-  password: string,
-  fullName?: string,
-) {
-  return supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
-      queryParams: {
-        prompt: "select_account",
-        access_type: "offline",
-      },
-    },
-  });
-}
-
-export async function resetPassword(email: string) {
-  return supabase.auth.resetPasswordForEmail(email);
-}
-
-export async function updatePassword(password: string) {
-  return supabase.auth.updateUser({
-    password,
-  });
-}
-
-export async function signOut() {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
-  return true;
-}
-
-export async function getCurrentUser() {
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error) throw error;
-  return user;
-}
-
-export async function getSession() {
-  const { data: { session }, error } = await supabase.auth.getSession();
-  if (error) throw error;
-  return session;
+// Función nombrada para la actualización de contraseña
+export async function updatePassword(newPassword: string): Promise<{ error: any }> {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      return { error: { message: 'No hay una sesión activa de usuario.' } };
+    }
+    await firebaseUpdatePassword(user, newPassword);
+    return { error: null };
+  } catch (err: any) {
+    if (err.code === 'auth/requires-recent-login') {
+      return { 
+        error: { message: 'Por seguridad, debes cerrar sesión y volver a ingresar para cambiar tu contraseña.' } 
+      };
+    }
+    return { error: { message: err.message || 'Error al actualizar la contraseña.' } };
+  }
 }
 
 export const authService = {
-  signIn,
-  signUp,
-  resetPassword,
-  updatePassword,
-  signOut,
-  getCurrentUser,
-  getSession,
-};
+  // Iniciar sesión con Email y Contraseña
+  async login(email: string, pass: string) {
+    return await signInWithEmailAndPassword(auth, email, pass);
+  },
 
-// ============================================
-// FUNCIONES ADICIONALES PARA EL AUTH-PROVIDER
-// ============================================
-
-export const getUserProfile = async (userId: string) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-  
-  if (error) {
-    console.error('Error al obtener perfil:', error);
-    return null;
-  }
-  return data;
-};
-
-export const loginWithGoogle = async () => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`
+  // Registrar un usuario con Email y Contraseña
+  async register(email: string, pass: string, name?: string) {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+    if (name && userCredential.user) {
+      await updateProfile(userCredential.user, { displayName: name });
     }
-  });
-  
-  if (error) {
-    console.error('Error al iniciar con Google:', error);
-    throw error;
+    return userCredential;
+  },
+
+  // Iniciar sesión / Registro con Google
+  async loginWithGoogle() {
+    const provider = new GoogleAuthProvider();
+    return await signInWithPopup(auth, provider);
+  },
+
+  // Actualizar contraseña
+  updatePassword,
+
+  // Cerrar sesión
+  async logout() {
+    return await signOut(auth);
   }
 };
-
-export const signInWithGoogle = loginWithGoogle;

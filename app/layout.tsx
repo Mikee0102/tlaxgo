@@ -13,6 +13,13 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Smart Guide",
   description: "Guía turística inteligente",
+  manifest: "/manifest.json", // <-- ¡Aquí enlazamos el manifest!
+  themeColor: "#ffffff",     // <-- Color de la barra superior en dispositivos móviles
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Smart Guide",
+  },
 };
 
 export default function RootLayout({
