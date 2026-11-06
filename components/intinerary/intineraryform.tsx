@@ -80,19 +80,18 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
   const handleRemoveDay = (dayIndex: number) => {
     const filtered = days.filter((_, idx) => idx !== dayIndex);
 
-    // Recalcular correlativamente desde la fecha de inicio
     if (startDate && filtered.length > 0) {
       const recalculated = filtered.map((d, idx) => {
         const currentDate = new Date(startDate);
         currentDate.setDate(currentDate.getDate() + idx);
         const dateStr = currentDate.toISOString().split('T')[0];
 
+        const subTitle = d.title.includes(' - ') ? d.title.split(' - ')[1] : 'Explorando Tlaxcala';
+
         return {
           ...d,
           date: dateStr,
-          title: d.title.startsWith('Día ')
-            ? `Día ${idx + 1} - ${d.title.split(' - ')[1] || 'Explorando Tlaxcala'}`
-            : d.title,
+          title: `Día ${idx + 1} - ${subTitle}`,
         };
       });
 
@@ -169,7 +168,8 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
       };
 
       if (initialData?.id) {
-        await itineraryService.updateFullItinerary(initialData.id, itineraryPayload);
+        // Actualizamos pasando el user.uid y el id del itinerario
+        await itineraryService.updateFullItinerary(user.uid, initialData.id, itineraryPayload);
       } else {
         await itineraryService.createFullItinerary(user.uid, itineraryPayload);
       }
@@ -196,7 +196,7 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
         <button
           type="button"
           onClick={onCancel}
-          className="text-xs text-slate-400 hover:text-white"
+          className="text-xs text-slate-400 hover:text-white cursor-pointer"
         >
           Cancelar
         </button>
@@ -267,7 +267,7 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
           <button
             type="button"
             onClick={handleAddNewDay}
-            className="px-4 py-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
+            className="px-4 py-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer"
           >
             <CalendarPlus className="w-4 h-4 text-sky-400" />
             + Agregar nuevo día
@@ -276,7 +276,7 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
 
         {days.length === 0 ? (
           <div className="p-8 text-center bg-slate-950/40 rounded-2xl border border-dashed border-slate-800 text-slate-400 text-xs">
-            Selecciona la fecha de inicio y haz clic en <strong>"+ Agregar nuevo día"</strong> para armar el cronograma.
+            Selecciona la fecha de inicio y haz clic en <strong>&quot;+ Agregar nuevo día&quot;</strong> para armar el cronograma.
           </div>
         ) : (
           days.map((day, dIdx) => (
@@ -300,7 +300,7 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
                   <button
                     type="button"
                     onClick={() => handleRemoveDay(dIdx)}
-                    className="text-slate-500 hover:text-red-400 text-xs flex items-center gap-1 transition"
+                    className="text-slate-500 hover:text-red-400 text-xs flex items-center gap-1 transition cursor-pointer"
                     title="Eliminar este día"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -354,7 +354,7 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
                     <button
                       type="button"
                       onClick={() => removeItemFromDay(dIdx, iIdx)}
-                      className="p-1.5 text-slate-500 hover:text-red-400 transition"
+                      className="p-1.5 text-slate-500 hover:text-red-400 transition cursor-pointer"
                       title="Eliminar parada"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -366,7 +366,7 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
               <button
                 type="button"
                 onClick={() => addItemToDay(dIdx)}
-                className="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1 font-medium pt-1"
+                className="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1 font-medium pt-1 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Agregar parada o actividad
               </button>
@@ -379,14 +379,14 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
         <button
           type="button"
           onClick={onCancel}
-          className="px-5 py-2.5 rounded-xl border border-slate-700 text-sm font-semibold text-slate-300 hover:bg-slate-800 transition"
+          className="px-5 py-2.5 rounded-xl border border-slate-700 text-sm font-semibold text-slate-300 hover:bg-slate-800 transition cursor-pointer"
         >
           Cancelar
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-sm font-bold transition disabled:opacity-50"
+          className="px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-sm font-bold transition disabled:opacity-50 cursor-pointer"
         >
           {loading
             ? 'Guardando...'

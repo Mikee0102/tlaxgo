@@ -1,20 +1,22 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Place, PlaceCategory } from '../../../types/place';
 import { fetchPlacesFromOverpass } from '../../../services/places.service';
 import SearchBar from '../../../components/map/SearchBar';
 import Filters from '../../../components/map/Filters';
 import PlaceCard from '../../../components/map/PlaceCard';
+import { ArrowLeft } from 'lucide-react';
 
 // Componente del mapa con SSR deshabilitado explícitamente
 const Map = dynamic(() => import('../../../components/map/Map'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 gap-3">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-sky-400"></div>
-      <p className="text-slate-400 text-sm font-medium animate-pulse">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 gap-3">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-sky-600"></div>
+      <p className="text-slate-600 text-sm font-medium animate-pulse">
         Inicializando mapa de Tlaxcala...
       </p>
     </div>
@@ -22,6 +24,7 @@ const Map = dynamic(() => import('../../../components/map/Map'), {
 });
 
 export default function ExplorePage() {
+  const router = useRouter();
   const [hasMounted, setHasMounted] = useState(false);
   const [allPlaces, setAllPlaces] = useState<Place[]>([]);
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>([]);
@@ -33,9 +36,10 @@ export default function ExplorePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
-  // 1. Garantizar que el componente esté completamente montado en el cliente antes de renderizar Leaflet
+  // 1. Garantizar que el componente esté montado y en modo claro por defecto
   useEffect(() => {
     setHasMounted(true);
+    document.documentElement.classList.remove('dark');
   }, []);
 
   // 2. Cargar datos iniciales de la API al montar el cliente
@@ -64,7 +68,6 @@ export default function ExplorePage() {
     startTransition(() => {
       let result = allPlaces;
 
-      // Filtrar por categoría / Favoritos
       if (activeCategory === 'favorites') {
         const savedFavorites: Place[] = JSON.parse(localStorage.getItem('tlaxgo_favorites') || '[]');
         const favIds = new Set(savedFavorites.map((fav) => fav.id));
@@ -73,7 +76,6 @@ export default function ExplorePage() {
         result = result.filter((place) => place.category === activeCategory);
       }
 
-      // Filtrar por texto de búsqueda
       if (searchTerm.trim() !== '') {
         const query = searchTerm.toLowerCase();
         result = result.filter(
@@ -87,19 +89,19 @@ export default function ExplorePage() {
     });
   }, [searchTerm, activeCategory, allPlaces, hasMounted]);
 
-  // Si aún no se ha completado la hidratación en el cliente, mostramos el skeleton
   if (!hasMounted) {
     return (
-      <main className="relative flex flex-col h-[calc(100vh-80px)] w-full overflow-hidden bg-slate-950 items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-sky-400"></div>
+      <main className="relative flex flex-col h-[calc(100vh-80px)] w-full overflow-hidden bg-slate-50 items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-sky-600"></div>
       </main>
     );
   }
 
   return (
-    <main className="relative flex flex-col h-[calc(100vh-80px)] w-full overflow-hidden bg-slate-950">
+    <main className="relative flex flex-col h-[calc(100vh-80px)] w-full overflow-hidden bg-slate-50 text-slate-900">
+
       {/* Contenedor Flotante de Controles */}
-      <div className="absolute top-4 left-4 right-4 z-[9999] max-w-xl mx-auto flex flex-col gap-3">
+      <div className="absolute top-16 sm:top-4 left-16 right-4 z-[9999] max-w-xl mx-auto flex flex-col gap-3">
         <SearchBar value={searchTerm} onChange={setSearchTerm} />
         <Filters activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
       </div>
@@ -107,9 +109,9 @@ export default function ExplorePage() {
       {/* Área del mapa */}
       <div className="flex-1 w-full h-full">
         {isLoading ? (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 gap-3">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-sky-400"></div>
-            <p className="text-slate-400 text-sm font-medium animate-pulse">
+          <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 gap-3">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-sky-600"></div>
+            <p className="text-slate-500 text-sm font-medium animate-pulse">
               Obteniendo atractivos de Overpass API...
             </p>
           </div>
@@ -127,7 +129,7 @@ export default function ExplorePage() {
 
       {/* Loader de transición */}
       {isPending && (
-        <div className="absolute top-24 right-4 z-[9999] bg-slate-950/90 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-2xl border border-slate-800 text-xs text-sky-400 font-medium animate-pulse">
+        <div className="absolute top-28 right-4 z-[9999] bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-xl border border-slate-200 text-xs text-sky-600 font-medium animate-pulse">
           Actualizando mapa...
         </div>
       )}
