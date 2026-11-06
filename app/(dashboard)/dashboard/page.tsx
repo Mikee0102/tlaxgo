@@ -17,7 +17,8 @@ import {
   Heart,
   Users,
   Map,
-  Ticket
+  Ticket,
+  Eye
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -28,7 +29,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // ⚠️ En Firebase Auth el identificador único es user.uid, no user.id
       const userId = user?.uid;
       if (!userId) return;
 
@@ -95,7 +95,6 @@ export default function DashboardPage() {
             </div>
           </header>
 
-          {/* Tarjetas con datos reales de la BD */}
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <StatsCard title="Usuarios Registrados" value={adminStats?.totalUsers || 0} icon="👥" color="blue" />
             <StatsCard title="Destinos y Atractivos" value={adminStats?.totalPlaces || 0} icon="📍" color="green" />
@@ -103,7 +102,6 @@ export default function DashboardPage() {
             <StatsCard title="Eventos Activos" value={adminStats?.totalEvents || 0} icon="🎉" color="red" />
           </section>
 
-          {/* Widgets analíticos */}
           <section className="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
             <ChartWidget />
             <RecentActivity />
@@ -148,7 +146,6 @@ export default function DashboardPage() {
               href="/itinerary"
               className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-sky-400"
             >
-              <Map className="w-4 h-4" />
               Ver Itinerarios
             </Link>
           </div>
@@ -168,7 +165,6 @@ export default function DashboardPage() {
           <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Map className="w-4 h-4 text-sky-400" />
                 Mis Itinerarios Favoritos
               </h2>
               <Link href="/itinerary" className="text-xs font-medium text-sky-400 hover:text-sky-300">
@@ -229,12 +225,27 @@ export default function DashboardPage() {
                       <MapPin className="w-4 h-4 text-sky-400 shrink-0" />
                       <div>
                         <p className="text-sm font-semibold text-white">{place.name}</p>
-                        <p className="text-[11px] text-slate-400">{place.category}</p>
+                        <p className="text-[11px] text-slate-400 capitalize">{place.category || 'Atractivo'}</p>
                       </div>
                     </div>
-                    <span className="text-[11px] text-slate-400 font-mono">
-                      {place.address || 'Tlaxcala'}
-                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
+                        {place.address || 'Tlaxcala'}
+                      </span>
+
+                      {/* 👁️ Botón con icono de ojo para ver en el mapa */}
+                      {place.lat && place.lon ? (
+                        <Link
+                          href={`/explore?lat=${place.lat}&lon=${place.lon}`}
+                          className="p-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/25 text-sky-400 border border-sky-500/30 transition cursor-pointer flex items-center gap-1.5 text-xs font-medium"
+                          title="Ver en el mapa"
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span className="hidden sm:inline">Ver</span>
+                        </Link>
+                      ) : null}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -246,4 +257,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

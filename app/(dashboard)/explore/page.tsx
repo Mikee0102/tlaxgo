@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useTransition, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Place, PlaceCategory } from '../../../types/place';
 import { fetchPlacesFromOverpass } from '../../../services/places.service';
@@ -23,8 +23,12 @@ const Map = dynamic(() => import('../../../components/map/Map'), {
   ),
 });
 
-export default function ExplorePage() {
+function ExploreContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const latParam = searchParams.get('lat');
+  const lonParam = searchParams.get('lon');
+
   const [hasMounted, setHasMounted] = useState(false);
   const [allPlaces, setAllPlaces] = useState<Place[]>([]);
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>([]);
@@ -52,6 +56,35 @@ export default function ExplorePage() {
         const data = await fetchPlacesFromOverpass();
         setAllPlaces(data);
         setFilteredPlaces(data);
+
+        // Si la URL trae coordenadas (viniendo desde el Dashboard/Favoritos), 
+        // buscamos el lugar correspondiente o creamos uno temporal para seleccionarlo
+        if (latParam && lonParam) {
+          const lat = parseFloat(latParam);
+          const lon = parseFloat(lonParam);
+
+          if (!isNaN(lat) && !isNaN(lon)) {
+            // Buscamos si existe un lugar con esas coordenadas exactas en los datos de Overpass
+            const matchedPlace = data.find(
+              (p) => Math.abs(p.lat - lat) < 0.0001 && Math.abs(p.lon - lon) < 0.0001
+            );
+
+            if (matchedPlace) {
+              setSelectedPlace(matchedPlace);
+            } else {
+              // Si no está exacto en la lista de Overpass, montamos un marcador temporal con los datos de la URL
+              setSelectedPlace({
+                id: 'custom-view-place',
+                name: 'Lugar Turístico Guardado',
+                category: 'other',
+                description: 'Ubicación seleccionada desde tu panel de control.',
+                lat,
+                lon,
+                address: 'Tlaxcala, México'
+              } as Place);
+            }
+          }
+        }
       } catch (error) {
         console.error('Error al inicializar los datos:', error);
       } finally {
@@ -59,7 +92,7 @@ export default function ExplorePage() {
       }
     }
     loadData();
-  }, [hasMounted]);
+  }, [hasMounted, latParam, lonParam]);
 
   // 3. Filtrado reactivo (incluyendo soporte a favoritos)
   useEffect(() => {
@@ -116,7 +149,8 @@ export default function ExplorePage() {
             </p>
           </div>
         ) : (
-          <Map
+          
+        <Map
             places={filteredPlaces}
             selectedPlace={selectedPlace}
             onSelectPlace={setSelectedPlace}
@@ -134,5 +168,19 @@ export default function ExplorePage() {
         </div>
       )}
     </main>
+  );
+}
+
+// Envoltorio con Suspense requerido por Next.js al utilizar useSearchParams
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-slate-50 gap-3">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-sky-600"></div>
+        <p className="text-slate-600 text-sm font-medium">Cargando explorador...</p>
+      </div>
+    }>
+      <ExploreContent />
+    </Suspense>
   );
 }
