@@ -17,13 +17,17 @@ export default function ItinerariesPage() {
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
+    if (!user?.uid) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      if (!user?.uid) return;
       const data = await itineraryService.getUserItineraries(user.uid);
       setItineraries(data);
     } catch (err) {
-      console.error(err);
+      console.error('Error al cargar itinerarios:', err);
     } finally {
       setLoading(false);
     }
@@ -47,9 +51,11 @@ export default function ItinerariesPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!user?.uid) return;
     if (!confirm('¿Estás seguro de eliminar este itinerario y todas sus actividades?')) return;
     try {
-      await itineraryService.deleteItinerary(id);
+      // Pasamos user.uid y el id del itinerario para que coincida con la subcolección de Firebase
+      await itineraryService.deleteItinerary(user.uid, id);
       loadData();
     } catch (err: any) {
       alert('Error al eliminar: ' + err.message);
@@ -79,7 +85,7 @@ export default function ItinerariesPage() {
               setEditingItinerary(null);
               setShowCreateForm(true);
             }}
-            className="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-2.5 rounded-full text-sm transition shadow-lg shadow-sky-500/20"
+            className="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-2.5 rounded-full text-sm transition shadow-lg shadow-sky-500/20 cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
             Crear Itinerario
@@ -105,7 +111,7 @@ export default function ItinerariesPage() {
           <div className="flex gap-3 border-b border-slate-800 pb-4">
             <button
               onClick={() => setActiveTab('available')}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition ${
+              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition cursor-pointer ${
                 activeTab === 'available'
                   ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30'
                   : 'text-slate-400 hover:text-white'
@@ -117,7 +123,7 @@ export default function ItinerariesPage() {
 
             <button
               onClick={() => setActiveTab('favorites')}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition ${
+              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition cursor-pointer ${
                 activeTab === 'favorites'
                   ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
                   : 'text-slate-400 hover:text-white'

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Place } from '../../types/place';
 import { getPlaceImages } from '../../utils/imageHelper';
 import { Heart, Navigation, MapPin, Share2, Check } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth'; // O la ruta donde tengas tu hook de autenticación
+import { favoritesService } from '@/services/favorites.service';
 
 interface PlaceCardProps {
   place: Place | null;
@@ -11,35 +13,68 @@ interface PlaceCardProps {
 }
 
 export default function PlaceCard({ place, onClose }: PlaceCardProps) {
+  const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
   const [copied, setCopied] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // Verificar si el lugar ya es favorito consultando la base de datos o local
   useEffect(() => {
-    if (place) {
-      const savedFavorites = JSON.parse(localStorage.getItem('tlaxgo_favorites') || '[]');
-      setIsFavorite(savedFavorites.some((fav: Place) => fav.id === place.id));
-      setCurrentImageIndex(0);
+    if (!place) return;
+    setCurrentImageIndex(0);
+
+    async function checkFavoriteStatus() {
+      if (!user?.uid || !place) { // 🛡️ Aseguramos que place no sea null aquí
+        const savedFavorites = JSON.parse(localStorage.getItem('tlaxgo_favorites') || '[]');
+        setIsFavorite(savedFavorites.some((fav: Place) => fav.id === place?.id));
+        return;
+      }
+
+      try {
+        const userFavs = await favoritesService.getUserFavorites(user.uid);
+        // Usamos place?.id para que TypeScript sepa que es seguro
+        setIsFavorite(userFavs.some((fav: any) => fav.id === place?.id?.toString()));
+      } catch (err) {
+        console.error('Error al verificar favorito:', err);
+      }
     }
-  }, [place]);
+
+    checkFavoriteStatus();
+  }, [place, user]);
 
   if (!place) return null;
 
   // Obtener imágenes específicas para este lugar
   const placeImages = getPlaceImages(place);
 
-  const toggleFavorite = () => {
-    const savedFavorites: Place[] = JSON.parse(localStorage.getItem('tlaxgo_favorites') || '[]');
-    let updatedFavorites: Place[];
-
-    if (isFavorite) {
-      updatedFavorites = savedFavorites.filter((fav) => fav.id !== place.id);
-    } else {
-      updatedFavorites = [...savedFavorites, place];
+  const toggleFavorite = async () => {
+    if (!user?.uid) {
+      alert('Debes iniciar sesión para guardar favoritos en tu cuenta.');
+      return;
     }
 
-    localStorage.setItem('tlaxgo_favorites', JSON.stringify(updatedFavorites));
-    setIsFavorite(!isFavorite);
+    try {
+      const newFavoriteState = !isFavorite;
+      setIsFavorite(newFavoriteState); // Actualización optimista de la interfaz
+
+      if (newFavoriteState) {
+        await favoritesService.addFavorite(user.uid, place.id.toString(), {
+          name: place.name,
+          category: place.category,
+          description: place.description || '',
+          location: place.address || 'Tlaxcala',
+          lat: place.lat,
+          lon: place.lon,
+          type: 'place',
+          rating: 4.8
+        });
+      } else {
+        await favoritesService.removeFavorite(user.uid, place.id.toString());
+      }
+    } catch (err) {
+      console.error('Error al actualizar favorito en Firestore:', err);
+      setIsFavorite(isFavorite); // Revertir en caso de error
+    }
   };
 
   const handleShare = async () => {
@@ -80,14 +115,14 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
 
-        {/* Puntos de Navegación (solamente si existen múltiples imágenes) */}
+        {/* Puntos de Navegación */}
         {placeImages.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
             {placeImages.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentImageIndex(idx)}
-                className={`w-2 h-2 rounded-full transition-all ${
+                className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
                   currentImageIndex === idx ? 'bg-sky-400 w-4' : 'bg-white/50'
                 }`}
               />
@@ -99,7 +134,7 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
         <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
           <button
             onClick={handleShare}
-            className="p-1.5 rounded-full bg-slate-950/60 backdrop-blur-md border border-slate-800 text-slate-300 hover:text-white transition"
+            className="p-1.5 rounded-full bg-slate-950/60 backdrop-blur-md border border-slate-800 text-slate-300 hover:text-white transition cursor-pointer"
             title="Compartir"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
@@ -107,18 +142,19 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
           
           <button
             onClick={toggleFavorite}
-            className={`p-1.5 rounded-full backdrop-blur-md border transition ${
+            className={`p-1.5 rounded-full backdrop-blur-md border transition cursor-pointer ${
               isFavorite
                 ? 'bg-rose-500/20 border-rose-500/40 text-rose-500'
                 : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:text-white'
             }`}
+            title="Guardar en favoritos"
           >
             <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-rose-500' : ''}`} />
           </button>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full bg-slate-950/60 backdrop-blur-md border border-slate-800 text-slate-300 hover:text-white transition"
+            className="p-1.5 rounded-full bg-slate-950/60 backdrop-blur-md border border-slate-800 text-slate-300 hover:text-white transition cursor-pointer"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -156,7 +192,7 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
           href={googleMapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold py-2 rounded-full transition shadow-lg shadow-sky-500/20 flex items-center justify-center gap-1.5"
+          className="w-full bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold py-2 rounded-full transition shadow-lg shadow-sky-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
         >
           <Navigation className="w-3.5 h-3.5" /> Cómo llegar
         </a>

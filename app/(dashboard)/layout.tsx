@@ -1,20 +1,8 @@
-import type { Metadata, Viewport } from 'next';
-import '@/app/globals.css';
+import Navbar from '@/components/layout/Navbar';
+import React from 'react';
+// 👈 Asegúrate de que esta ruta coincida con la ubicación real de tu componente Navbar
 
-export const metadata: Metadata = {
-  title: 'Tlax.go | Rutas e Itinerarios Turísticos de Tlaxcala',
-  description: 'Descubre haciendas, ecoturismo, gastronomía y eventos culturales en Tlaxcala.',
-};
-
-// Configuración recomendada para Next.js 14 / 15 / 16
-export const viewport: Viewport = {
-  themeColor: '#020617', // slate-950
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-};
-
-export default function RootLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -46,10 +34,14 @@ export default function RootLayout({
 =======
 >>>>>>> origin/develop
   return (
-    <html lang="es">
-      <body className="bg-slate-950 text-white antialiased">
+    <div className="min-h-screen bg-slate-950 text-white antialiased flex flex-col">
+      {/* Barra de navegación persistente en todo el dashboard */}
+      <Navbar />
+
+      {/* Contenido principal de las subrutas (itinerario, exploración, etc.) */}
+      <main className="flex-1 w-full">
         {children}
-      </body>
-    </html>
+      </main>
+    </div>
   );
 }
