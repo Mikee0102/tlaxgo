@@ -1,1 +1,0 @@
-//Estoy probando el chatgpt para ver si funciona y si puede ayudarme a programar en typescript y en javascript, ya que me gusta mucho la programacion y quiero aprender mas de ella.
