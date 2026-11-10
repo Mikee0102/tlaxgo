@@ -1,0 +1,43 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.1.0
+  slack: circleci/slack@4.12.5
+
+jobs:
+  build_and_test:
+    docker:
+      - image: cimg/node:20.17.0 
+    steps:
+      - checkout 
+      
+      # 1. Le decimos explícitamente al Orb que use pnpm
+      - node/install-packages:
+          pkg-manager: pnpm
+          
+      # 2. Cambiamos el comando de build a pnpm
+      - run:
+          name: Construir la aplicación web
+          command: pnpm run build 
+          
+      # 3. Ejecutar Cypress (npx sigue funcionando bien con pnpm)
+      - run:
+          name: Pruebas automatizadas con Cypress
+          command: npx cypress run 
+          
+      # Notificación FORZOSA a Slack si falla
+      - slack/notify:
+          event: fail
+          channel: "C0CCMK8GG8H"
+          template: basic_fail_1
+          
+      # Notificación FORZOSA a Slack si pasa
+      - slack/notify:
+          event: pass
+          channel: "C0CCMK8GG8H"
+          template: basic_success_1
+
+workflows:
+  flujo_de_integracion:
+    jobs:
+      - build_and_test

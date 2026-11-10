@@ -14,8 +14,8 @@ export default function MarketingPage() {
       <Features />
       <Lugares />
       <Rutas />
-      <MunicipiosUnicos />
       <FavoritosCTA />
+      <MunicipiosUnicos />
     </div>
   );
 }

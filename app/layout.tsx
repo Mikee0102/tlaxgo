@@ -1,6 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
-import "./globals.css"; // <-- Asegúrate de que esté importado
+
+import { AuthProvider } from "@/providers/auth-provider";
+import "./globals.css";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -11,6 +13,19 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Smart Guide",
   description: "Guía turística inteligente",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Smart Guide",
+  },
+};
+
+// <-- Aquí va el viewport correcto en la raíz
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -19,10 +34,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning>
-      <body className={`${poppins.variable} font-sans antialiased`} suppressHydrationWarning>
-        {children}
+    <html lang="es" data-scroll-behavior="smooth">
+      <body
+        className={`${poppins.variable} font-sans antialiased`}
+        suppressHydrationWarning
+      >
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
+  
 }

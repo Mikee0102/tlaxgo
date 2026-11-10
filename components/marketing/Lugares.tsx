@@ -1,5 +1,6 @@
-'use client';
+"use client";
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 type CategoriaKey = 'todos' | 'naturaleza' | 'cultura' | 'aventura';
 
@@ -72,6 +73,12 @@ const categorias: { key: CategoriaKey; label: string }[] = [
 
 export default function Lugares() {
   const [filtro, setFiltro] = useState<CategoriaKey>('todos');
+  const router = useRouter();
+
+  const handleNavigate = (event: React.MouseEvent, _path: string) => {
+    event.preventDefault();
+    router.push('/login');
+  };
 
   const destinosFiltrados = filtro === 'todos' 
     ? destinosData 
@@ -86,7 +93,12 @@ export default function Lugares() {
             <span className="text-sky-400 font-semibold tracking-widest text-xs uppercase block mb-3">
               Descubre el Corazón de México
             </span>
-            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+            <h2
+              onClick={() => router.push('/login')}
+              role="button"
+              aria-label="Ir a iniciar sesión"
+              className="text-4xl md:text-5xl font-extrabold tracking-tight text-white cursor-pointer"
+            >
               Destinos Imperdibles de <span className="text-sky-400">Tlaxcala</span>
             </h2>
           </div>
@@ -136,18 +148,10 @@ export default function Lugares() {
                   <h3 className="text-2xl font-bold text-white group-hover:text-sky-400 transition-colors mb-3">
                     {item.nombre}
                   </h3>
-                  <p className="text-slate-300 text-sm leading-relaxed mb-6">
+                  <p className="text-slate-300 text-sm leading-relaxed">
                     {item.descripcion}
                   </p>
                 </div>
-
-                <a 
-                  href={`/municipios/${item.id}`}
-                  className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-sky-400 hover:text-sky-300 transition"
-                >
-                  Ver Guía Completa 
-                  <span className="transform group-hover:translate-x-1 transition-transform">&rarr;</span>
-                </a>
               </div>
             </div>
           ))}

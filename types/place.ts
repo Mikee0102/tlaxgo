@@ -1,11 +1,6 @@
-export type PlaceCategory =
-  | 'museum'
-  | 'church'
-  | 'park'
-  | 'viewpoint'
-  | 'restaurant'
-  | 'hotel'
-  | 'other';
+// types/place.ts
+
+export type PlaceCategory = 'museum' | 'church' | 'park' | 'viewpoint' | 'restaurant' | 'hotel' | 'other';
 
 export interface Place {
   id: string;
@@ -16,8 +11,8 @@ export interface Place {
   address?: string;
   phone?: string;
   website?: string;
-  // Campos que se conectarán con Supabase en fases posteriores
   rating?: number;
-  imageUrl?: string;
   description?: string;
+  image?: string;
+  wikipedia?: string; // 👈 Agrega esta propiedad opcional
 }

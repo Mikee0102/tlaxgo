@@ -1,10 +1,15 @@
 'use client';
+
 import React from 'react';
+import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Hero() {
+  const { user, isAdmin, loading } = useAuth();
+  const isAuthenticated = !loading && !!user;
+
   return (
     <section id="hero" className="relative min-h-[85vh] flex items-center justify-center bg-slate-950 text-slate-100 overflow-hidden pt-16 pb-16">
-      {/* Imagen local cargada desde la carpeta public */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img 
@@ -29,18 +34,28 @@ export default function Hero() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a
-            href="#destinos"
-            className="w-full sm:w-auto px-8 py-4 rounded-full bg-sky-500 text-slate-950 font-bold text-sm tracking-wider uppercase shadow-lg shadow-sky-500/20 hover:bg-sky-400 transition-all duration-300"
+          <Link
+            href="/explore"
+            className="w-full sm:w-auto px-8 py-4 rounded-full bg-sky-500 text-slate-950 font-bold text-sm tracking-wider uppercase shadow-lg shadow-sky-500/20 hover:bg-sky-400 transition-all duration-300 text-center"
           >
             Explorar Destinos
-          </a>
-          <a
-            href="/auth/register"
-            className="w-full sm:w-auto px-8 py-4 rounded-full bg-slate-900/80 backdrop-blur-md text-slate-200 font-bold text-sm tracking-wider uppercase border border-slate-800 hover:bg-slate-800 hover:text-white transition-all duration-300"
-          >
-            Crear mi Cuenta
-          </a>
+          </Link>
+
+          {isAuthenticated ? (
+            <Link
+              href="/dashboard"
+              className="w-full sm:w-auto px-8 py-4 rounded-full bg-slate-900/80 backdrop-blur-md text-sky-400 font-bold text-sm tracking-wider uppercase border border-sky-500/30 hover:bg-slate-800 hover:border-sky-500 transition-all duration-300 text-center"
+            >
+              {isAdmin ? 'Ir al Panel Admin' : 'Continuar a mi Ruta'}
+            </Link>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="w-full sm:w-auto px-8 py-4 rounded-full bg-slate-900/80 backdrop-blur-md text-slate-200 font-bold text-sm tracking-wider uppercase border border-slate-800 hover:bg-slate-800 hover:text-white transition-all duration-300 text-center"
+            >
+              Crear mi Cuenta
+            </Link>
+          )}
         </div>
       </div>
     </section>
