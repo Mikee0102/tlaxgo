@@ -4,10 +4,19 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit, Trash2, Loader2, ArrowLeft } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+//importar firebase
+import { db } from '@/lib/firebase/config';
+import { 
+  collection, 
+  getDocs, 
+  addDoc, 
+  deleteDoc, 
+  doc, 
+  query, 
+  orderBy, 
+  serverTimestamp 
+} from 'firebase/firestore';
 import Link from 'next/link';
-
-const supabase = createClient();
 
 export default function AdminItineraryPage() {
   const { user, isAdmin, loading: authLoading } = useAuth();
@@ -26,38 +35,51 @@ export default function AdminItineraryPage() {
 
   const loadItineraries = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('itineraries')
-      .select('*')
-      .order('created_at', { ascending: false });
-    setItineraries(data || []);
-    setLoading(false);
+    try {
+      const q = query(collection(db, 'itineraries'), orderBy('created_at', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const items = querySnapshot.docs.map(docSnap => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          ...data,
+          // Manejo seguro por si created_at es un Timestamp de Firebase o fecha antigua
+          created_at: data.created_at?.toDate ? data.created_at.toDate().toISOString() : new Date().toISOString()
+        };
+      });
+      setItineraries(items);
+    } catch (error) {
+      console.error('Error al cargar itinerarios:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const createItinerary = async () => {
     const title = prompt('Título del itinerario:');
     if (!title) return;
 
-    const { data, error } = await supabase
-      .from('itineraries')
-      .insert({
-        user_id: user?.id,
+    try {
+      await addDoc(collection(db, 'itineraries'), {
+        user_id: user?.uid, // En Firebase Auth el ID suele ser 'uid'
         title,
-        status: 'planned'
-      })
-      .select();
-
-    if (error) {
-      alert('Error al crear: ' + error.message);
-    } else {
+        status: 'planned',
+        created_at: serverTimestamp()
+      });
       loadItineraries();
+    } catch (error: any) {
+      alert('Error al crear: ' + error.message);
     }
   };
 
   const deleteItinerary = async (id: string) => {
     if (!confirm('¿Eliminar este itinerario?')) return;
-    await supabase.from('itineraries').delete().eq('id', id);
-    loadItineraries();
+    try {
+      await deleteDoc(doc(db, 'itineraries', id));
+      loadItineraries();
+    } catch (error: any) {
+      alert('Error al eliminar: ' + error.message);
+    }
   };
 
   if (authLoading || loading) {
