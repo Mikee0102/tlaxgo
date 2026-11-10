@@ -28,13 +28,13 @@ jobs:
       # Notificación FORZOSA a Slack si falla
       - slack/notify:
           event: fail
-          channel: "tu-canal-de-slack" # Asegúrate de poner el ID de tu canal
+          channel: "C0CCMK8GG8H"
           template: basic_fail_1
           
       # Notificación FORZOSA a Slack si pasa
       - slack/notify:
           event: pass
-          channel: "tu-canal-de-slack" 
+          channel: "C0CCMK8GG8H"
           template: basic_success_1
 
 workflows:
