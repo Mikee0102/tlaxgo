@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 
 import { AuthProvider } from "@/providers/auth-provider";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister"; // 👈 Importamos el componente
 import "./globals.css";
 
 const poppins = Poppins({
@@ -21,7 +22,6 @@ export const metadata: Metadata = {
   },
 };
 
-// <-- Aquí va el viewport correcto en la raíz
 export const viewport: Viewport = {
   themeColor: "#ffffff",
   width: "device-width",
@@ -39,9 +39,11 @@ export default function RootLayout({
         className={`${poppins.variable} font-sans antialiased`}
         suppressHydrationWarning
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ServiceWorkerRegister /> {/* 👈 Se ejecuta de forma segura en el cliente */}
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
-  
 }
