@@ -2,6 +2,7 @@
 import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
+  // Hola este cambio solo es para volver a hacer merge y probar la notificación de slack
   return {
     name: 'Tlax.go - Guía Turística de Tlaxcala',
     short_name: 'Tlax.go',
