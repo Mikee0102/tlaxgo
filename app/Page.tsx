@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Menu, X, Compass } from 'lucide-react';
+//Esto igual es para una prueba de notificación de Slack en CircleCI, no tiene relación con el código de la app.
 
 export default function Home() {
   const [isOpen, setIsOpen] = useState(false);
