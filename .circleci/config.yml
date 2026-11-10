@@ -1,6 +1,5 @@
 version: 2.1
 
-# Los Orbs son paquetes de CircleCI que facilitan integraciones
 orbs:
   node: circleci/node@5.1.0
   slack: circleci/slack@4.12.5
@@ -8,31 +7,31 @@ orbs:
 jobs:
   build_and_test:
     docker:
-      # Utilizamos un contenedor con la versión de Node.js 20.17
       - image: cimg/node:20.17.0 
     steps:
-      - checkout # Clona el código de GitHub
+      - checkout 
       
-      # Instala las dependencias (npm install)
-      - node/install-packages 
-      
-      # Construye la aplicación Next.js
+      # 1. Le decimos explícitamente al Orb que use pnpm
+      - node/install-packages:
+          pkg-manager: pnpm
+          
+      # 2. Cambiamos el comando de build a pnpm
       - run:
           name: Construir la aplicación web
-          command: npm run build 
+          command: pnpm run build 
           
-      # Ejecuta las pruebas End-to-End
+      # 3. Ejecutar Cypress (npx sigue funcionando bien con pnpm)
       - run:
           name: Pruebas automatizadas con Cypress
           command: npx cypress run 
           
-      # Notificación FORZOSA a Slack si el proceso FALLA
+      # Notificación FORZOSA a Slack si falla
       - slack/notify:
           event: fail
-          channel: "tu-canal-de-slack" # Reemplaza con el nombre de tu canal
+          channel: "tu-canal-de-slack" # Asegúrate de poner el ID de tu canal
           template: basic_fail_1
           
-      # Notificación FORZOSA a Slack si el proceso es EXITOSO
+      # Notificación FORZOSA a Slack si pasa
       - slack/notify:
           event: pass
           channel: "tu-canal-de-slack" 
