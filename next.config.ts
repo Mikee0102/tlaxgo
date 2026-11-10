@@ -9,10 +9,12 @@ const withPWA = require("next-pwa")({
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+
   turbopack: {
     root: process.cwd(),
   },
-  allowedDevOrigins: ['192.168.56.1', 'localhost:3000'],
+
+  allowedDevOrigins: ["192.168.56.1", "localhost:3000"],
 };
 
 export default withPWA(nextConfig);

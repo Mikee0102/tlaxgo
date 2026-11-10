@@ -42,7 +42,6 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
 
   return (
     <div className="min-h-[85vh] bg-slate-950 text-white p-6 md:p-10 max-w-4xl mx-auto space-y-8">
@@ -162,4 +161,5 @@ export default function ProfilePage() {
       </div>
     </div>
   );
+}
 }
