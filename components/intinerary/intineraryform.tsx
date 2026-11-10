@@ -398,3 +398,4 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
     </form>
   );
 }
+//mostrar la imformacion de la ubicacion de cada parada, con un mapa y la direccion, ademas de la opcion de agregar fotos y videos de cada parada
