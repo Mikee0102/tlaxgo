@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit, Trash2, Loader2, ArrowLeft } from 'lucide-react';
@@ -17,21 +17,12 @@ import {
 import Link from 'next/link';
 
 export default function AdminItineraryPage() {
-  const { user, isAdmin, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading: authLoading, profileLoading } = useAuth();
   const router = useRouter();
   const [itineraries, setItineraries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!authLoading && !isAdmin) {
-      router.replace('/');
-    }
-    if (isAdmin) {
-      loadItineraries();
-    }
-  }, [isAdmin, authLoading]);
-
-  const loadItineraries = async () => {
+  const loadItineraries = useCallback(async () => {
     setLoading(true);
     try {
       const querySnapshot = await getDocs(collection(db, 'itineraries'));
@@ -52,7 +43,16 @@ export default function AdminItineraryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && !profileLoading && !isAdmin) {
+      router.replace('/');
+    }
+    if (!profileLoading && isAdmin) {
+      loadItineraries();
+    }
+  }, [isAdmin, authLoading, profileLoading, router, loadItineraries]);
 
   const createItinerary = async () => {
     const title = prompt('Título del itinerario:');
@@ -81,7 +81,7 @@ export default function AdminItineraryPage() {
     }
   };
 
-  if (authLoading || loading) {
+  if (authLoading || profileLoading || loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-sky-400 animate-spin" />
