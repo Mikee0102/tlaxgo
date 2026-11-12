@@ -79,14 +79,18 @@ const los60Municipios: MunicipioDetalle[] = [
 const imagenPorDefecto = '/hero.jpg';
 
 const imagenesMunicipio: Record<string, string> = {
+  'Amaxac de Guerrero': '/Amaxacjpg.jpg',
   'Acuamanala de Miguel Hidalgo': '/Acuamanala de Miguel Hidalgo.jpg',
   'Altzayanca': '/Altzayancajpg.jpg',
   'Apetatitlán de Antonio Carvajal': '/Apetatitlán de Antonio Carvajal.jpg',
   'Apizaco': '/Apizacojpg.jpg',
+  'Atlangatepec': '/Atlangatepec.jpg',
   'Benito Juárez': '/Benito Juárez.jpg',
   'Calpulalpan': '/Calpulalpan.jpg',
+  'Chiautempan': '/Chiautempan.jpg',
   'Contla de Juan Cuamatzi': '/Contla de Juan Cuamatzi.jpg',
   'Cuapiaxtla': '/Cuapiaxtla.jpg',
+  'Cuaxomulco': '/Cuaxomulco1.jpg',
   'El Carmen Tequexquitla': '/El Carmen Tequexquitla.jpg',
   'Emiliano Zapata': '/Emiliano Zapata.jpg',
   'Españita': '/Españita.jpg',
@@ -94,6 +98,8 @@ const imagenesMunicipio: Record<string, string> = {
   'Hueyotlipan': '/Hueyotlipan.jpg',
   'Ixtenco': '/ixtenco.jpg',
   'Ixtacuixtla de Mariano Matamoros': '/xtacuixtla de Mariano Matamoros.jpeg',
+  'La Magdalena Tlaltelulco': '/La Magdalena Tlaltelulco.jpg',
+  'Lázaro Cárdenas': '/Lázaro Cárdenas.jpg',
   'Mazatecochco de José María Morelos': '/Mazatecochco de José María Morelos.jpg',
   'Muñoz de Domingo Arenas': '/Muñoz de Domingo Arenas.jpg',
   'Nanacamilpa de Mariano Arista': '/luciernagas.jpg',
@@ -102,26 +108,37 @@ const imagenesMunicipio: Record<string, string> = {
   'Papalotla de Xicohténcatl': '/Papalotla de Xicohténcatl.jpg',
   'San Damián Texoloc': '/San Damián Texóloc.jpg',
   'San Francisco Tetlanohcan': '/San Francisco Tetlanohcan.jpg',
+  'San Jerónimo Zacualpan': '/San Jerónimo Zacualpan.jpg',
   'San José Teacalco': '/San José Teacalco.jpg',
   'San Juan Huactzinco': '/San Juan Huactzinco.jpg',
   'San Lorenzo Axocomanitla': '/San Lorenzo Axocomanitla.jpeg',
   'San Lucas Tecopilco': '/San Lucas Tecopilco.jpg',
   'San Pablo del Monte': '/San Pablo del Monte.png',
+  'Sanctórum de Lázaro Cárdenas': '/Sanctórum de Lázaro Cárdenas.jpg',
   'Santa Ana Nopalucan': '/Santa Ana Nopalucan.jpg',
   'Santa Apolonia Teacalco': '/Santa Apolonia Teacalco.jpg',
+  'Santa Catarina Ayometla': '/Santa Catarina Ayometla.jpg',
   'Santa Cruz Quilehtla': '/Santa Cruz Quilehtlajpg.jpg',
   'Santa Cruz Tlaxcala': '/Santa Cruz Tlaxcala.jpg',
+  'Santa Isabel Xiloxoxtla': '/Santa Isabel Xiloxoxtla.jpg',
+  'Tenancingo': '/Tenancingo.jpg',
   'Teolocholco': '/Teolocholco.jpg',
   'Tepeyanco': '/Tepeyancojpg.jpg',
+  'Tepetitla de Lardizábal': '/Tepetitla de Lardizábal.jpg',
+  'Terrenate': '/Terrenate.jpg',
+  'Tetla de la Solidaridad': '/Tetla de la Solidaridad.jpg',
   'Tetlatlahuca': '/Tetlatlahucajpeg.jpeg',
   'Tlaxcala': '/Tlaxcala.jpg',
   'Tlaxco': '/tlaxco.jpg',
   'Tocatlán': '/Tocatlán.jpg',
   'Totolac': '/Totolac.jpg',
   'Tzompantepec': '/Tzompantepec.jpg',
+  'Xaloztoc': '/Xaloztoc.jpg',
+  'Xaltocan': '/Xaltocan.jpg',
   'Xicohtzinco': '/Xicohtzincojpg.jpg',
   'Yauhquemehcan': '/Yauhquemehcanjpg.jpg',
   'Zacatelco': '/Zacatelco.jpg',
+  'Zitlaltepec de Trinidad Sánchez Santos': '/malinche.jpg',
 };
 
 type Estacion = 'todas' | 'primavera' | 'verano' | 'otono' | 'invierno';
@@ -155,15 +172,13 @@ const slugify = (text: string) => {
 };
 
 const obtenerImagenMunicipio = (municipio: string, imagen?: string) => {
-  // Prioridad: imagen explícita > mapping conocido > slug en carpeta /municipios/ > imagen por defecto
-  if (imagen) return encodeURI(imagen);
+  // Prioridad: imagen explícita > mapping conocido > fallback local seguro
+  if (imagen && imagen.trim() !== '') return encodeURI(imagen);
 
   const mapped = imagenesMunicipio[municipio];
   if (mapped) return encodeURI(mapped);
 
-  const slug = slugify(municipio);
-  const candidate = `/municipios/${slug}.jpg`;
-  return encodeURI(candidate || imagenPorDefecto);
+  return encodeURI(imagenPorDefecto);
 };
 
 export default function MunicipiosUnicos() {
