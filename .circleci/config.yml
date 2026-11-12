@@ -1,0 +1,43 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.1.0
+  slack: circleci/slack@4.12.5
+
+jobs:
+  build_and_test:
+    docker:
+      - image: cimg/node:20.17.0 
+    steps:
+      - checkout 
+      
+      # 1. Instalamos paquetes con pnpm
+      - node/install-packages:
+          pkg-manager: pnpm
+          
+      # 2. Construir la aplicación web (Next.js)
+      - run:
+          name: Construir la aplicación web
+          command: pnpm run build 
+          
+      # 3. Prueba rápida simulada
+      - run:
+          name: Prueba de conexión
+          command: echo "El build fue exitoso. Todo conectado correctamente."
+          
+      # Notificación FORZOSA a Slack si falla
+      - slack/notify:
+          event: fail
+          channel: "C0CCMK8GG8H"
+          template: basic_fail_1
+          
+      # Notificación FORZOSA a Slack si pasa
+      - slack/notify:
+          event: pass
+          channel: "C0CCMK8GG8H"
+          template: basic_success_1
+
+workflows:
+  flujo_de_integracion:
+    jobs:
+      - build_and_test
