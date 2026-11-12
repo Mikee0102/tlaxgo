@@ -11,9 +11,7 @@ import {
   getDocs, 
   addDoc, 
   deleteDoc, 
-  doc, 
-  query, 
-  orderBy, 
+  doc,
   serverTimestamp 
 } from 'firebase/firestore';
 import Link from 'next/link';
@@ -27,17 +25,18 @@ export default function AdminItineraryPage() {
   const loadItineraries = useCallback(async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, 'itineraries'), orderBy('created_at', 'desc'));
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await getDocs(collection(db, 'itineraries'));
       const items = querySnapshot.docs.map(docSnap => {
         const data = docSnap.data();
+        const createdAt = data.createdAt || data.created_at;
         return {
           id: docSnap.id,
           ...data,
-          // Manejo seguro por si created_at es un Timestamp de Firebase o fecha antigua
-          created_at: data.created_at?.toDate ? data.created_at.toDate().toISOString() : new Date().toISOString()
+          created_at: createdAt?.toDate
+            ? createdAt.toDate().toISOString()
+            : createdAt || new Date().toISOString()
         };
-      });
+      }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setItineraries(items);
     } catch (error) {
       console.error('Error al cargar itinerarios:', error);
@@ -61,10 +60,10 @@ export default function AdminItineraryPage() {
 
     try {
       await addDoc(collection(db, 'itineraries'), {
-        user_id: user?.uid, // En Firebase Auth el ID suele ser 'uid'
+        userId: user?.uid,
         title,
         status: 'planned',
-        created_at: serverTimestamp()
+        createdAt: serverTimestamp()
       });
       loadItineraries();
     } catch (error: any) {
