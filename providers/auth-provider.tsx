@@ -11,6 +11,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   isAdmin: boolean;
   loading: boolean;
+  profileLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,40 +19,54 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   isAdmin: false,
   loading: true,
+  profileLoading: true,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    let profileRequest = 0;
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      const request = ++profileRequest;
       setUser(currentUser);
+      setLoading(false);
+      setProfileLoading(Boolean(currentUser));
 
-      if (currentUser) {
-        try {
-          // Obtener datos del perfil guardados en Firestore
-          const userProfile = await profileService.getProfile(currentUser.uid);
-          setProfile(userProfile);
-        } catch (error) {
-          console.error('Error al obtener perfil del usuario:', error);
-          setProfile(null);
-        }
-      } else {
+      if (!currentUser) {
         setProfile(null);
+        return;
       }
 
-      setLoading(false);
+      void profileService.getProfile(currentUser.uid)
+        .then((userProfile) => {
+          if (request === profileRequest) {
+            setProfile(userProfile);
+            setProfileLoading(false);
+          }
+        })
+        .catch((error) => {
+          console.error('Error al obtener perfil del usuario:', error);
+          if (request === profileRequest) {
+            setProfile(null);
+            setProfileLoading(false);
+          }
+        });
     });
 
-    return () => unsubscribe();
+    return () => {
+      profileRequest += 1;
+      unsubscribe();
+    };
   }, []);
 
   const isAdmin = profile?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, profile, isAdmin, loading }}>
+    <AuthContext.Provider value={{ user, profile, isAdmin, loading, profileLoading }}>
       {children}
     </AuthContext.Provider>
   );
