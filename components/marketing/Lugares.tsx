@@ -88,26 +88,26 @@ export default function Lugares() {
     <section id="destinos" className="py-24 bg-slate-900 text-slate-100">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-          <div>
-            <span className="text-sky-400 font-semibold tracking-widest text-xs uppercase block mb-3">
+        <div className="flex flex-col items-center justify-center mb-16 gap-4 text-center">
+          <div className="w-full md:max-w-2xl">
+            <span className="text-sky-400 font-semibold tracking-widest text-xs uppercase block mb-3 text-center">
               Descubre el Corazón de México
             </span>
             <h2
               onClick={() => router.push('/login')}
               role="button"
               aria-label="Ir a iniciar sesión"
-              className="text-4xl md:text-5xl font-extrabold tracking-tight text-white cursor-pointer"
+              className="text-4xl md:text-5xl font-extrabold tracking-tight text-white cursor-pointer text-center"
             >
               Destinos Imperdibles de <span className="text-sky-400">Tlaxcala</span>
             </h2>
           </div>
-          <p className="text-slate-300 max-w-md text-sm md:text-base leading-relaxed">
+          <p className="text-slate-300 max-w-2xl text-sm md:text-base leading-relaxed text-center">
             Sumérgete en la magia de nuestros municipios. Experiencias diseñadas para conectar con la historia, el arte y los paisajes naturales.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3 mb-12 border-b border-slate-800 pb-6">
+        <div className="flex flex-wrap justify-center items-center gap-3 mb-12 border-b border-slate-800 pb-6">
           {categorias.map((cat) => (
             <button
               key={cat.key}
