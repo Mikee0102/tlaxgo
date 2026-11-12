@@ -168,8 +168,7 @@ export default function ItineraryForm({ initialData, onSuccess, onCancel }: Prop
       };
 
       if (initialData?.id) {
-        // Actualizamos pasando el user.uid y el id del itinerario
-        await itineraryService.updateFullItinerary(user.uid, initialData.id, itineraryPayload);
+        await itineraryService.updateFullItinerary(initialData.id, itineraryPayload);
       } else {
         await itineraryService.createFullItinerary(user.uid, itineraryPayload);
       }
