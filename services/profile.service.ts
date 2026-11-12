@@ -6,12 +6,10 @@ import {
   collection, 
   getCountFromServer, 
   getDocs, 
-  query, 
-  orderBy, 
-  limit, 
-  collectionGroup 
+  query
 } from "firebase/firestore";
 import { UserProfile } from "@/types/user";
+import { itineraryService } from "@/services/itinerary.service";
 
 export const profileService = {
   // Obtener perfil por ID
@@ -49,13 +47,12 @@ export const profileService = {
       getCountFromServer(collection(db, "events")),
     ]);
 
-    // Conteo global seguro de itinerarios usando collectionGroup
-    const itinerariesSnap = await getDocs(collectionGroup(db, "itinerarios"));
+    const itinerariesCount = await getCountFromServer(collection(db, "itineraries"));
 
     return {
       totalUsers: usersCount.data().count,
       totalPlaces: placesCount.data().count,
-      totalItineraries: itinerariesSnap.size,
+      totalItineraries: itinerariesCount.data().count,
       totalEvents: eventsCount.data().count,
       recentReviews: [], // Evita fallos si la ruta de reviews requiere índices avanzados
     };
@@ -64,16 +61,15 @@ export const profileService = {
   // Resumen personalizado para el Dashboard de Turista
   async getUserDashboardData(userId: string) {
     const favsQuery = query(collection(db, "users", userId, "favorites"));
-    const itinerariesQuery = query(collection(db, "users", userId, "itinerarios"));
 
-    const [favsSnap, itSnap] = await Promise.all([
+    const [favsSnap, favoriteItineraries] = await Promise.all([
       getDocs(favsQuery),
-      getDocs(itinerariesQuery),
+      itineraryService.getUserFavoriteItineraries(userId),
     ]);
 
     return {
       favoritePlaces: favsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
-      favoriteItineraries: itSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+      favoriteItineraries,
       userReviews: [], // Evita consultas cruzadas sin permisos de grupo
     };
   },
