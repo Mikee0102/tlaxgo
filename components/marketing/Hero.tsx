@@ -50,7 +50,7 @@ export default function Hero() {
             </Link>
           ) : (
             <Link
-              href="/auth/login"
+              href="/login"
               className="w-full sm:w-auto px-8 py-4 rounded-full bg-slate-900/80 backdrop-blur-md text-slate-200 font-bold text-sm tracking-wider uppercase border border-slate-800 hover:bg-slate-800 hover:text-white transition-all duration-300 text-center"
             >
               Crear mi Cuenta

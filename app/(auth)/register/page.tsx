@@ -232,7 +232,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-xs text-slate-400">
           ¿Ya tienes cuenta?{' '}
-          <Link href="/auth/login" className="text-sky-400 hover:underline font-semibold">
+          <Link href="/login" className="text-sky-400 hover:underline font-semibold">
             Inicia sesión aquí
           </Link>
         </p>
