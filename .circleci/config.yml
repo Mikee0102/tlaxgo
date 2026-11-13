@@ -40,4 +40,5 @@ jobs:
 workflows:
   flujo_de_integracion:
     jobs:
-      - build_and_test
+      - build_and_test:
+          context: slack-secrets
