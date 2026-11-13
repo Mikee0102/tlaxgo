@@ -112,7 +112,7 @@ export default function Navbar() {
             </div>
           ) : !loading ? (
             <Link
-              href="/auth/login"
+              href="/login"
               className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-6 py-2.5 rounded-full text-xs transition shadow-lg shadow-sky-500/20 inline-block cursor-pointer"
             >
               Login
@@ -197,7 +197,7 @@ export default function Navbar() {
             </div>
           ) : !loading ? (
             <Link 
-              href="/auth/login" 
+              href="/login" 
               onClick={() => setIsOpen(false)} 
               className="block text-center bg-sky-500 text-slate-950 font-bold py-2 rounded-xl text-sm"
             >
