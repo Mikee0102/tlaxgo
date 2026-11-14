@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit, Trash2, Loader2, ArrowLeft } from 'lucide-react';
@@ -11,49 +11,48 @@ import {
   getDocs, 
   addDoc, 
   deleteDoc, 
-  doc, 
-  query, 
-  orderBy, 
+  doc,
   serverTimestamp 
 } from 'firebase/firestore';
 import Link from 'next/link';
 
 export default function AdminItineraryPage() {
-  const { user, isAdmin, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading: authLoading, profileLoading } = useAuth();
   const router = useRouter();
   const [itineraries, setItineraries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!authLoading && !isAdmin) {
-      router.replace('/');
-    }
-    if (isAdmin) {
-      loadItineraries();
-    }
-  }, [isAdmin, authLoading]);
-
-  const loadItineraries = async () => {
+  const loadItineraries = useCallback(async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, 'itineraries'), orderBy('created_at', 'desc'));
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await getDocs(collection(db, 'itineraries'));
       const items = querySnapshot.docs.map(docSnap => {
         const data = docSnap.data();
+        const createdAt = data.createdAt || data.created_at;
         return {
           id: docSnap.id,
           ...data,
-          // Manejo seguro por si created_at es un Timestamp de Firebase o fecha antigua
-          created_at: data.created_at?.toDate ? data.created_at.toDate().toISOString() : new Date().toISOString()
+          created_at: createdAt?.toDate
+            ? createdAt.toDate().toISOString()
+            : createdAt || new Date().toISOString()
         };
-      });
+      }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setItineraries(items);
     } catch (error) {
       console.error('Error al cargar itinerarios:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && !profileLoading && !isAdmin) {
+      router.replace('/');
+    }
+    if (!profileLoading && isAdmin) {
+      loadItineraries();
+    }
+  }, [isAdmin, authLoading, profileLoading, router, loadItineraries]);
 
   const createItinerary = async () => {
     const title = prompt('Título del itinerario:');
@@ -61,10 +60,10 @@ export default function AdminItineraryPage() {
 
     try {
       await addDoc(collection(db, 'itineraries'), {
-        user_id: user?.uid, // En Firebase Auth el ID suele ser 'uid'
+        userId: user?.uid,
         title,
         status: 'planned',
-        created_at: serverTimestamp()
+        createdAt: serverTimestamp()
       });
       loadItineraries();
     } catch (error: any) {
@@ -82,7 +81,7 @@ export default function AdminItineraryPage() {
     }
   };
 
-  if (authLoading || loading) {
+  if (authLoading || profileLoading || loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-sky-400 animate-spin" />

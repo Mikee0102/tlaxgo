@@ -54,8 +54,8 @@ export default function ItinerariesPage() {
     if (!user?.uid) return;
     if (!confirm('¿Estás seguro de eliminar este itinerario y todas sus actividades?')) return;
     try {
-      // Pasamos user.uid y el id del itinerario para que coincida con la subcolección de Firebase
-      await itineraryService.deleteItinerary(user.uid, id);
+      // Los itinerarios compartidos se eliminan por su ID global.
+      await itineraryService.deleteItinerary(id);
       loadData();
     } catch (err: any) {
       alert('Error al eliminar: ' + err.message);

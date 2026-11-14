@@ -11,6 +11,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   isAdmin: boolean;
   loading: boolean;
+  profileLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,12 +19,14 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   isAdmin: false,
   loading: true,
+  profileLoading: true,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
     let authStateRequest = 0;
@@ -31,7 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       const requestId = ++authStateRequest;
       setLoading(true);
+    let profileRequest = 0;
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      const request = ++profileRequest;
       setUser(currentUser);
+      setLoading(false);
+      setProfileLoading(Boolean(currentUser));
 
       if (currentUser) {
         try {
@@ -46,7 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       } else {
+      if (!currentUser) {
         setProfile(null);
+        return;
       }
 
       if (requestId === authStateRequest) {
@@ -62,6 +72,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       authStateRequest += 1;
+      void profileService.getProfile(currentUser.uid)
+        .then((userProfile) => {
+          if (request === profileRequest) {
+            setProfile(userProfile);
+            setProfileLoading(false);
+          }
+        })
+        .catch((error) => {
+          console.error('Error al obtener perfil del usuario:', error);
+          if (request === profileRequest) {
+            setProfile(null);
+            setProfileLoading(false);
+          }
+        });
+    });
+
+    return () => {
+      profileRequest += 1;
       unsubscribe();
     };
   }, []);
@@ -69,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = profile?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, profile, isAdmin, loading }}>
+    <AuthContext.Provider value={{ user, profile, isAdmin, loading, profileLoading }}>
       {children}
     </AuthContext.Provider>
   );

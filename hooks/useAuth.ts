@@ -15,16 +15,18 @@ export function useAuth() {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
-    // Sincroniza o crea el perfil en Firestore sin errores de tipo
-    await profileService.updateProfile(user.uid, {
+    router.replace('/dashboard');
+
+    void profileService.updateProfile(user.uid, {
       email: user.email || '',
       name: user.displayName || undefined,
       photoURL: user.photoURL || undefined,
       avatar_url: user.photoURL || undefined,
       lastLogin: new Date().toISOString(),
+    }).catch((error) => {
+      console.error('Error al sincronizar el perfil del usuario:', error);
     });
 
-    router.push('/dashboard');
     return user;
   };
 
