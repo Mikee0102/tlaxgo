@@ -5,33 +5,42 @@ orbs:
   slack: circleci/slack@4.12.5
 
 jobs:
-  build_and_test:
+  build:
     docker:
-      - image: cimg/node:20.17.0 
+      - image: cimg/node:20.17.0
     steps:
-      - checkout 
-      
-      # 1. Instalamos paquetes con pnpm
+      - checkout
       - node/install-packages:
           pkg-manager: pnpm
-          
-      # 2. Construir la aplicación web (Next.js)
       - run:
           name: Construir la aplicación web
-          command: pnpm run build 
-          
-      # 3. Prueba rápida simulada
-      - run:
-          name: Prueba de conexión
-          command: echo "El build fue exitoso. Todo conectado correctamente."
-          
-      # Notificación FORZOSA a Slack si falla
+          command: pnpm run build
       - slack/notify:
           event: fail
           channel: "C0CCMK8GG8H"
           template: basic_fail_1
-          
-      # Notificación FORZOSA a Slack si pasa
+
+  playwright_tests:
+    docker:
+      # Imagen oficial con Node 20, Chromium y dependencias del sistema ya instaladas
+      - image: mcr.microsoft.com/playwright:v1.49.0-noble
+    steps:
+      - checkout
+      - run:
+          name: Instalar dependencias con pnpm
+          command: |
+            corepack enable
+            pnpm install --frozen-lockfile
+      - run:
+          name: Ejecutar pruebas E2E con Playwright
+          command: pnpm test:e2e
+      - store_artifacts:
+          path: playwright-report
+          destination: reporte-playwright
+      - slack/notify:
+          event: fail
+          channel: "C0CCMK8GG8H"
+          template: basic_fail_1
       - slack/notify:
           event: pass
           channel: "C0CCMK8GG8H"
@@ -40,4 +49,7 @@ jobs:
 workflows:
   flujo_de_integracion:
     jobs:
-      - build_and_test
+      - build:
+          context: slack-secrets
+      - playwright_tests:
+          context: slack-secrets
