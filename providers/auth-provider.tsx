@@ -26,26 +26,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let authStateRequest = 0;
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      const requestId = ++authStateRequest;
+      setLoading(true);
       setUser(currentUser);
 
       if (currentUser) {
         try {
-          // Obtener datos del perfil guardados en Firestore
           const userProfile = await profileService.getProfile(currentUser.uid);
-          setProfile(userProfile);
+          if (requestId === authStateRequest) {
+            setProfile(userProfile);
+          }
         } catch (error) {
           console.error('Error al obtener perfil del usuario:', error);
-          setProfile(null);
+          if (requestId === authStateRequest) {
+            setProfile(null);
+          }
         }
       } else {
         setProfile(null);
       }
 
+      if (requestId === authStateRequest) {
+        setLoading(false);
+      }
+    }, (error) => {
+      authStateRequest += 1;
+      console.error('Error al verificar la sesión de Firebase:', error);
+      setUser(null);
+      setProfile(null);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      authStateRequest += 1;
+      unsubscribe();
+    };
   }, []);
 
   const isAdmin = profile?.role === 'admin';
