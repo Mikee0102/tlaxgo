@@ -29,6 +29,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
+    let authStateRequest = 0;
+
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      const requestId = ++authStateRequest;
+      setLoading(true);
     let profileRequest = 0;
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       const request = ++profileRequest;
@@ -36,11 +41,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       setProfileLoading(Boolean(currentUser));
 
+      if (currentUser) {
+        try {
+          const userProfile = await profileService.getProfile(currentUser.uid);
+          if (requestId === authStateRequest) {
+            setProfile(userProfile);
+          }
+        } catch (error) {
+          console.error('Error al obtener perfil del usuario:', error);
+          if (requestId === authStateRequest) {
+            setProfile(null);
+          }
+        }
+      } else {
       if (!currentUser) {
         setProfile(null);
         return;
       }
 
+      if (requestId === authStateRequest) {
+        setLoading(false);
+      }
+    }, (error) => {
+      authStateRequest += 1;
+      console.error('Error al verificar la sesión de Firebase:', error);
+      setUser(null);
+      setProfile(null);
+      setLoading(false);
+    });
+
+    return () => {
+      authStateRequest += 1;
       void profileService.getProfile(currentUser.uid)
         .then((userProfile) => {
           if (request === profileRequest) {
