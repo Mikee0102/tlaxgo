@@ -30,31 +30,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let profileRequest = 0;
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      const request = ++profileRequest;
+      const requestId = ++profileRequest;
+
       setUser(currentUser);
       setLoading(false);
       setProfileLoading(Boolean(currentUser));
 
       if (!currentUser) {
         setProfile(null);
+        setProfileLoading(false);
         return;
       }
 
-      void profileService.getProfile(currentUser.uid)
+      void profileService
+        .getProfile(currentUser.uid)
         .then((userProfile) => {
-          if (request === profileRequest) {
+          if (requestId === profileRequest) {
             setProfile(userProfile);
             setProfileLoading(false);
           }
         })
         .catch((error) => {
           console.error('Error al obtener perfil del usuario:', error);
-          if (request === profileRequest) {
+          if (requestId === profileRequest) {
             setProfile(null);
             setProfileLoading(false);
           }
         });
+    }, (error) => {
+      profileRequest += 1;
+      console.error('Error al verificar la sesi\u00f3n de Firebase:', error);
+      setUser(null);
+      setProfile(null);
+      setLoading(false);
+      setProfileLoading(false);
     });
 
     return () => {
