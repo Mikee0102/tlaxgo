@@ -8,9 +8,7 @@ import { fetchPlacesFromOverpass } from '../../../services/places.service';
 import SearchBar from '../../../components/map/SearchBar';
 import Filters from '../../../components/map/Filters';
 import PlaceCard from '../../../components/map/PlaceCard';
-import { ArrowLeft } from 'lucide-react';
 
-// Componente del mapa con SSR deshabilitado explícitamente
 const Map = dynamic(() => import('../../../components/map/Map'), {
   ssr: false,
   loading: () => (
@@ -22,6 +20,13 @@ const Map = dynamic(() => import('../../../components/map/Map'), {
     </div>
   ),
 });
+
+const normalizeText = (text?: string) =>
+  (text ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
 
 function ExploreContent() {
   const router = useRouter();
@@ -40,13 +45,11 @@ function ExploreContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
-  // 1. Garantizar que el componente esté montado y en modo claro por defecto
   useEffect(() => {
     setHasMounted(true);
     document.documentElement.classList.remove('dark');
   }, []);
 
-  // 2. Cargar datos iniciales de la API al montar el cliente
   useEffect(() => {
     if (!hasMounted) return;
 
@@ -57,14 +60,11 @@ function ExploreContent() {
         setAllPlaces(data);
         setFilteredPlaces(data);
 
-        // Si la URL trae coordenadas (viniendo desde el Dashboard/Favoritos), 
-        // buscamos el lugar correspondiente o creamos uno temporal para seleccionarlo
         if (latParam && lonParam) {
           const lat = parseFloat(latParam);
           const lon = parseFloat(lonParam);
 
           if (!isNaN(lat) && !isNaN(lon)) {
-            // Buscamos si existe un lugar con esas coordenadas exactas en los datos de Overpass
             const matchedPlace = data.find(
               (p) => Math.abs(p.lat - lat) < 0.0001 && Math.abs(p.lon - lon) < 0.0001
             );
@@ -72,7 +72,6 @@ function ExploreContent() {
             if (matchedPlace) {
               setSelectedPlace(matchedPlace);
             } else {
-              // Si no está exacto en la lista de Overpass, montamos un marcador temporal con los datos de la URL
               setSelectedPlace({
                 id: 'custom-view-place',
                 name: 'Lugar Turístico Guardado',
@@ -94,7 +93,6 @@ function ExploreContent() {
     loadData();
   }, [hasMounted, latParam, lonParam]);
 
-  // 3. Filtrado reactivo (incluyendo soporte a favoritos)
   useEffect(() => {
     if (!hasMounted) return;
 
@@ -109,13 +107,23 @@ function ExploreContent() {
         result = result.filter((place) => place.category === activeCategory);
       }
 
-      if (searchTerm.trim() !== '') {
-        const query = searchTerm.toLowerCase();
-        result = result.filter(
-          (place) =>
-            place.name.toLowerCase().includes(query) ||
-            (place.description && place.description.toLowerCase().includes(query))
-        );
+      const query = normalizeText(searchTerm);
+      if (query !== '') {
+        result = result.filter((place) => {
+          const name = normalizeText(place.name);
+          const description = normalizeText(place.description);
+          const address = normalizeText(place.address);
+          const municipality = normalizeText(
+            (place as any).municipality || (place as any).municipio || (place as any).city
+          );
+
+          return (
+            name.includes(query) ||
+            description.includes(query) ||
+            address.includes(query) ||
+            municipality.includes(query)
+          );
+        });
       }
 
       setFilteredPlaces(result);
@@ -132,14 +140,11 @@ function ExploreContent() {
 
   return (
     <main className="relative flex flex-col h-[calc(100vh-80px)] w-full overflow-hidden bg-slate-50 text-slate-900">
-
-      {/* Contenedor Flotante de Controles */}
       <div className="absolute top-16 sm:top-4 left-16 right-4 z-[9999] max-w-xl mx-auto flex flex-col gap-3">
         <SearchBar value={searchTerm} onChange={setSearchTerm} />
         <Filters activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
       </div>
 
-      {/* Área del mapa */}
       <div className="flex-1 w-full h-full">
         {isLoading ? (
           <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 gap-3">
@@ -149,8 +154,7 @@ function ExploreContent() {
             </p>
           </div>
         ) : (
-          
-        <Map
+          <Map
             places={filteredPlaces}
             selectedPlace={selectedPlace}
             onSelectPlace={setSelectedPlace}
@@ -158,10 +162,8 @@ function ExploreContent() {
         )}
       </div>
 
-      {/* Tarjeta de detalle */}
       <PlaceCard place={selectedPlace} onClose={() => setSelectedPlace(null)} />
 
-      {/* Loader de transición */}
       {isPending && (
         <div className="absolute top-28 right-4 z-[9999] bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-xl border border-slate-200 text-xs text-sky-600 font-medium animate-pulse">
           Actualizando mapa...
@@ -171,7 +173,6 @@ function ExploreContent() {
   );
 }
 
-// Envoltorio con Suspense requerido por Next.js al utilizar useSearchParams
 export default function ExplorePage() {
   return (
     <Suspense fallback={
@@ -184,3 +185,5 @@ export default function ExplorePage() {
     </Suspense>
   );
 }
+
+
