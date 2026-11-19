@@ -197,7 +197,7 @@ export default function Navbar() {
             </div>
           ) : !loading ? (
             <Link 
-              href="/login" 
+              href="/" 
               onClick={() => setIsOpen(false)} 
               className="block text-center bg-sky-500 text-slate-950 font-bold py-2 rounded-xl text-sm"
             >

@@ -19,7 +19,7 @@ export default function AuthGuard({
   useEffect(() => {
     if (loading || isAuthorized) return;
 
-    router.replace(user ? '/dashboard' : '/auth/login');
+    router.replace(user ? '/dashboard' : '/login');
   }, [isAuthorized, loading, router, user]);
 
   if (loading) {
