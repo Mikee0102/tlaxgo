@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 
 import { AuthProvider } from "@/providers/auth-provider";
-import ServiceWorkerRegister from "@/components/ServiceWorkerRegister"; // 👈 Importamos el componente
+import ServiceWorkerRegister from "@/components/PWA/ServiceWorkerRegister";
+import NetworkStatusBanner from "@/components/PWA/NetworkStatusBanner";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -40,7 +41,8 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <ServiceWorkerRegister /> {/* 👈 Se ejecuta de forma segura en el cliente */}
+          <ServiceWorkerRegister />
+          <NetworkStatusBanner />
           {children}
         </AuthProvider>
       </body>
