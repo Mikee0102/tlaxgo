@@ -17,6 +17,12 @@ export interface PendingAction {
 
 const QUEUE_KEY = 'tlaxgo_offline_queue_v1';
 
+const notifyQueueUpdated = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('tlaxgo-queue-updated'));
+  }
+};
+
 export const offlineQueueService = {
   getQueue(): PendingAction[] {
     if (typeof window === 'undefined') return [];
@@ -36,11 +42,13 @@ export const offlineQueueService = {
     };
     queue.push(newItem);
     localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    notifyQueueUpdated();
     return newItem;
   },
 
   saveQueue(queue: PendingAction[]) {
     localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    notifyQueueUpdated();
   },
 
   async flushQueue(): Promise<{ synced: number; remaining: number }> {

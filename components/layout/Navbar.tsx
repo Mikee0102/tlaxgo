@@ -11,7 +11,8 @@ import {
   LogOut, 
   ShieldCheck, 
   LayoutDashboard,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -31,6 +32,10 @@ export default function Navbar() {
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
+  };
+
+  const handleRefresh = () => {
+    window.location.reload();
   };
 
   return (
@@ -56,6 +61,15 @@ export default function Navbar() {
 
         {/* CONTROLES DE USUARIO / ACCIONES (DESKTOP) */}
         <div className="hidden md:flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-800 text-slate-400 transition hover:border-slate-600 hover:bg-slate-900 hover:text-slate-200"
+            aria-label="Actualizar página"
+            title="Actualizar página"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+          </button>
           {isAuthenticated ? (
             <div className="flex items-center gap-2.5">
               {/* BADGE DE ROL */}
@@ -121,13 +135,24 @@ export default function Navbar() {
         </div>
 
         {/* BOTÓN MENÚ MÓVIL */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden text-slate-300 hover:text-white p-2"
-          aria-label="Menú"
-        >
-          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        <div className="md:hidden flex items-center gap-1">
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-900 hover:text-slate-200"
+            aria-label="Actualizar página"
+            title="Actualizar página"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="text-slate-300 hover:text-white p-2"
+            aria-label="Menú"
+          >
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* MENÚ DESPLEGABLE (MÓVIL) */}
