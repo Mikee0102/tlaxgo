@@ -4,13 +4,16 @@ import { useState, useEffect } from 'react';
 import { Place } from '../../types/place';
 import { getPlaceImages } from '../../utils/imageHelper';
 import { Heart, Navigation, MapPin, Share2, Check } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth'; // O la ruta donde tengas tu hook de autenticación
+import { useAuth } from '@/hooks/useAuth'; // Verifica que coincida con tu import (ej. @/providers/auth-provider)
 import { favoritesService } from '@/services/favorites.service';
+import { offlineQueueService } from '@/services/offlineQueue.service';
 
 interface PlaceCardProps {
   place: Place | null;
   onClose: () => void;
 }
+
+const LOCAL_FAVS_KEY = 'tlaxgo_favorites';
 
 export default function PlaceCard({ place, onClose }: PlaceCardProps) {
   const { user } = useAuth();
@@ -18,22 +21,35 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
   const [copied, setCopied] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Verificar si el lugar ya es favorito consultando la base de datos o local
+  // Helper para mantener sincronizada la caché local de favoritos
+  const updateLocalFavoritesCache = (targetPlace: Place, shouldBeFav: boolean) => {
+    const savedFavorites: Place[] = JSON.parse(localStorage.getItem(LOCAL_FAVS_KEY) || '[]');
+    let updated: Place[];
+    if (shouldBeFav) {
+      const exists = savedFavorites.some((fav) => fav.id.toString() === targetPlace.id.toString());
+      updated = exists ? savedFavorites : [...savedFavorites, targetPlace];
+    } else {
+      updated = savedFavorites.filter((fav) => fav.id.toString() !== targetPlace.id.toString());
+    }
+    localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(updated));
+  };
+
   useEffect(() => {
     if (!place) return;
     setCurrentImageIndex(0);
 
     async function checkFavoriteStatus() {
-      if (!user?.uid || !place) { // 🛡️ Aseguramos que place no sea null aquí
-        const savedFavorites = JSON.parse(localStorage.getItem('tlaxgo_favorites') || '[]');
-        setIsFavorite(savedFavorites.some((fav: Place) => fav.id === place?.id));
-        return;
-      }
+      // Primero leemos caché local para respuesta instantánea (y modo offline)
+      const savedFavorites: Place[] = JSON.parse(localStorage.getItem(LOCAL_FAVS_KEY) || '[]');
+      const localMatch = savedFavorites.some((fav) => fav.id.toString() === place?.id?.toString());
+      setIsFavorite(localMatch);
+
+      if (!user?.uid || !place || !navigator.onLine) return;
 
       try {
         const userFavs = await favoritesService.getUserFavorites(user.uid);
-        // Usamos place?.id para que TypeScript sepa que es seguro
-        setIsFavorite(userFavs.some((fav: any) => fav.id === place?.id?.toString()));
+        const cloudMatch = userFavs.some((fav: any) => fav.id === place?.id?.toString());
+        setIsFavorite(cloudMatch);
       } catch (err) {
         console.error('Error al verificar favorito:', err);
       }
@@ -44,7 +60,6 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
 
   if (!place) return null;
 
-  // Obtener imágenes específicas para este lugar
   const placeImages = getPlaceImages(place);
 
   const toggleFavorite = async () => {
@@ -53,27 +68,64 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
       return;
     }
 
-    try {
-      const newFavoriteState = !isFavorite;
-      setIsFavorite(newFavoriteState); // Actualización optimista de la interfaz
+    const newFavoriteState = !isFavorite;
+    const placeIdStr = place.id.toString();
+    const placePayload = {
+      name: place.name,
+      category: place.category,
+      description: place.description || '',
+      location: place.address || 'Tlaxcala',
+      address: place.address || 'Tlaxcala',
+      lat: place.lat,
+      lon: place.lon,
+      type: 'place',
+      rating: 4.8,
+    };
 
+    // 1. Actualización inmediata en UI y caché local
+    setIsFavorite(newFavoriteState);
+    updateLocalFavoritesCache(place, newFavoriteState);
+
+    // 2. Si NO hay internet, encolamos para subir cuando regrese la conexión
+    if (!navigator.onLine) {
       if (newFavoriteState) {
-        await favoritesService.addFavorite(user.uid, place.id.toString(), {
-          name: place.name,
-          category: place.category,
-          description: place.description || '',
-          location: place.address || 'Tlaxcala',
-          lat: place.lat,
-          lon: place.lon,
-          type: 'place',
-          rating: 4.8
+        offlineQueueService.enqueue({
+          type: 'ADD_FAVORITE',
+          userId: user.uid,
+          payload: { placeId: placeIdStr, placeData: placePayload },
         });
       } else {
-        await favoritesService.removeFavorite(user.uid, place.id.toString());
+        offlineQueueService.enqueue({
+          type: 'REMOVE_FAVORITE',
+          userId: user.uid,
+          payload: { placeId: placeIdStr },
+        });
+      }
+      return;
+    }
+
+    // 3. Si HAY internet, intentamos guardar directo en Firestore (y si falla por red, encolamos)
+    try {
+      if (newFavoriteState) {
+        await favoritesService.addFavorite(user.uid, placeIdStr, placePayload);
+      } else {
+        await favoritesService.removeFavorite(user.uid, placeIdStr);
       }
     } catch (err) {
-      console.error('Error al actualizar favorito en Firestore:', err);
-      setIsFavorite(isFavorite); // Revertir en caso de error
+      console.error('Sin conexión estable, encolando acción para sincronizar después:', err);
+      if (newFavoriteState) {
+        offlineQueueService.enqueue({
+          type: 'ADD_FAVORITE',
+          userId: user.uid,
+          payload: { placeId: placeIdStr, placeData: placePayload },
+        });
+      } else {
+        offlineQueueService.enqueue({
+          type: 'REMOVE_FAVORITE',
+          userId: user.uid,
+          payload: { placeId: placeIdStr },
+        });
+      }
     }
   };
 
@@ -101,7 +153,6 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
 
   return (
     <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 bg-slate-950/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-800 p-4 z-[9999] transition-all duration-300 text-slate-200 overflow-hidden">
-      
       {/* Galería de Imágenes Dinámica */}
       <div className="relative w-full h-36 rounded-xl overflow-hidden mb-3 bg-slate-900">
         <img
@@ -115,7 +166,6 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
 
-        {/* Puntos de Navegación */}
         {placeImages.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
             {placeImages.map((_, idx) => (
@@ -139,7 +189,7 @@ export default function PlaceCard({ place, onClose }: PlaceCardProps) {
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
           </button>
-          
+
           <button
             onClick={toggleFavorite}
             className={`p-1.5 rounded-full backdrop-blur-md border transition cursor-pointer ${
